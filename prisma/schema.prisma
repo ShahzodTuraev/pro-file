@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// CUSTOMIZED ENUM LISTS:
+enum General_status {
+  ACTIVE
+  PAUSED
+  DELETED
+}
+enum User_role {
+  USER
+  ADMIN
+}
+enum Template_type {
+ISSUED
+ACTIVE
+EXPIRED
+}
+// SCHEME FOR CREATING AND DATA INSERTING "visit_list" TABLE
+model visit_list{
+  id                      String                  @default(cuid()) @id
+  ip                      String
+  country                 String
+  country_code            String
+  region                  String
+  lat                     String
+  lon                     String
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  user_list               user_list[]
+}
+
+// SCHEME FOR CREATING AND DATA INSERTING "user_list" TABLE
+model user_list{
+  id                      String                  @default(cuid()) @id
+  username                String
+  email                   String                  @unique
+  password                String
+  role                    User_role               @default(ADMIN)
+  status                  General_status          @default(ACTIVE)
+  visit                   visit_list              @relation(fields: [visit_id], references: [id])
+  visit_id                String
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  template_connect        template_connect[]
+}
+
+model template_list{
+  id                      String                  @default(cuid()) @id
+  name                    String
+  type                    Template_type
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  template_connect        template_connect[]
+}
+
+model sns_list{
+  id                      String                  @default(cuid()) @id
+  name                    String
+  img_url                 String
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  sns_data                sns_data[]
+}
+
+model template_connect{
+  id                      String                  @default(cuid()) @id
+  user                    user_list               @relation(fields: [user_id], references: [id])
+  user_id                 String
+  template                template_list           @relation(fields: [template_id], references: [id])
+  template_id             String
+  main                    String
+  status                  General_status
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  location_data           location_data[]
+  sns_data                sns_data[]
+  template_data           template_data[]
+}
+
+model location_data{
+  id                      String                  @default(cuid()) @id
+  template_connect        template_connect        @relation(fields: [temp_connect_id], references: [id])
+  temp_connect_id         String
+  lat                     String
+  lon                     String
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  template_data           template_data[]
+}
+
+model sns_data{
+  id                      String                  @default(cuid()) @id
+  sns                     sns_list                @relation(fields: [sns_id], references: [id])
+  sns_id                  String
+  template_connect_sns    template_connect        @relation(fields: [temp_connect_id], references: [id])
+  temp_connect_id         String
+  user_link               String
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+  template_data           template_data[]
+}
+
+model template_data{
+  id                      String                  @default(cuid()) @id
+  template_connect_data   template_connect        @relation(fields: [temp_connect_id], references: [id])
+  temp_connect_id         String
+  name                    String
+  bio                     String?
+  img_url                 String?
+  phone_num               String?
+  fax                     String?
+  sns_data                sns_data?               @relation(fields: [sns_data_id], references: [id])
+  sns_data_id             String?
+  location_data           location_data?          @relation(fields: [location_id], references: [id])
+  location_id             String?
+  view_cnt                Int?                    @default(0)
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+}
