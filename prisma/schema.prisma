@@ -36,11 +36,13 @@ model visit_list{
   country                 String
   country_code            String
   region                  String
+  city                    String
   lat                     String
   lon                     String
   created_at              DateTime                @default(now())
   updated_at              DateTime                @updatedAt
   user_list               user_list[]
+  view_list               view_list[]
 }
 
 // SCHEME FOR CREATING AND DATA INSERTING "user_list" TABLE
@@ -127,7 +129,14 @@ model template_data{
   sns_data_id             String?
   location_data           location_data?          @relation(fields: [location_id], references: [id])
   location_id             String?
-  view_cnt                Int?                    @default(0)
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+}
+
+model view_list{
+  id                      String                  @default(cuid()) @id
+  visit                   visit_list              @relation(fields: [visit_id], references: [id])
+  visit_id                String
   created_at              DateTime                @default(now())
   updated_at              DateTime                @updatedAt
 }

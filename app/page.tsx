@@ -1,4 +1,8 @@
 "use client";
+
+import { useIp } from "@/hooks/useIp";
+
 export default function Home() {
-  return <div>id</div>;
+  useIp();
+  return <div>fgfdfg</div>;
 }
