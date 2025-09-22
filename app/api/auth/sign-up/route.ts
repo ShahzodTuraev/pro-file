@@ -1,17 +1,17 @@
+"use server";
+import { signIn } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
-    const data = await req.json();
-    const vid = await prisma.visit_list.create({
-      data,
-      select: { id: true },
-    });
-    const cookieStore = await cookies();
-    cookieStore.set("VID", vid?.id);
+    // const data = await req.json();
+    const data = await signIn("google");
+    // const vid = await prisma.visit_list.create({
+    //   data,
+    //   select: { id: true },
+    // });
     return NextResponse.json({
-      VID: vid?.id,
+      data,
       status: 201,
     });
   } catch (err) {

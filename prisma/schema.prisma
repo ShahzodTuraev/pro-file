@@ -29,6 +29,10 @@ ISSUED
 ACTIVE
 EXPIRED
 }
+enum Auth_type {
+  GOOGLE
+  EMAIL_PASS
+}
 // SCHEME FOR CREATING AND DATA INSERTING "visit_list" TABLE
 model visit_list{
   id                      String                  @default(cuid()) @id
@@ -43,6 +47,8 @@ model visit_list{
   updated_at              DateTime                @updatedAt
   user_list               user_list[]
   view_list               view_list[]
+  otp_list                otp_list[]
+  pending_user            pending_user[]
 }
 
 // SCHEME FOR CREATING AND DATA INSERTING "user_list" TABLE
@@ -50,11 +56,13 @@ model user_list{
   id                      String                  @default(cuid()) @id
   username                String
   email                   String                  @unique
-  password                String
+  password                String?
+  auth_type               Auth_type               @default(EMAIL_PASS)
   role                    User_role               @default(ADMIN)
   status                  General_status          @default(ACTIVE)
   visit                   visit_list              @relation(fields: [visit_id], references: [id])
   visit_id                String
+  img_url                 String?
   created_at              DateTime                @default(now())
   updated_at              DateTime                @updatedAt
   template_connect        template_connect[]
@@ -137,6 +145,28 @@ model view_list{
   id                      String                  @default(cuid()) @id
   visit                   visit_list              @relation(fields: [visit_id], references: [id])
   visit_id                String
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+}
+
+model otp_list{
+  id                      String                  @default(cuid()) @id
+  visit                   visit_list?              @relation(fields: [visit_id], references: [id])
+  visit_id                String?
+  otp                     String
+  email                   String
+  expire_at               DateTime
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
+}
+
+model pending_user{
+  id                      String                  @default(cuid()) @id
+  visit                   visit_list?              @relation(fields: [visit_id], references: [id])
+  visit_id                String?
+  name                    String
+  password                String
+  email                   String
   created_at              DateTime                @default(now())
   updated_at              DateTime                @updatedAt
 }

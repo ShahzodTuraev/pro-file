@@ -8,7 +8,7 @@ export function useIp() {
     try {
       const ipRes = await axios(process.env.NEXT_PUBLIC_IP_API || "");
       const ipResData = ipRes?.data;
-      const vidRes = await axios.post("/api/visit/register", {
+      await axios.post("/api/visit/register", {
         ip: ipResData?.query || "",
         country: ipResData?.country || "",
         country_code: ipResData?.countryCode || "",
@@ -17,21 +17,21 @@ export function useIp() {
         lat: ipResData?.lat.toString() || "",
         lon: ipResData?.lon.toString() || "",
       });
-      localStorage.setItem("VID", vidRes?.data?.VID);
     } catch (error) {
       console.log("ipManage error:", error);
     }
   };
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const vid = localStorage.getItem("VID");
-      if (!vid) {
-        try {
-          ipManageHanler();
-        } catch (error) {
-          console.error("Failed to parse user from localStorage:", error);
-        }
+  const vidCheck = async () => {
+    try {
+      const vidResData = await axios.get("/api/visit/check");
+      if (vidResData?.data?.status === 404) {
+        ipManageHanler();
       }
+    } catch (error) {
+      console.log("vidFetchErr::", error);
     }
+  };
+  useEffect(() => {
+    vidCheck();
   }, [path]);
 }
