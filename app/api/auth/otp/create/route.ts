@@ -11,9 +11,8 @@ export async function POST(req: NextRequest) {
       name: string;
     } = await req.json();
     const cookieStore = await cookies();
-    console.log(cookieStore.get("VID"));
+
     const visit_id = cookieStore.get("VID")?.value;
-    console.log("visitid:::", visit_id);
     const expire_at = new Date(Date.now() + 3.5 * 60 * 1000); // now + 3 minutes
     const otp = String(randomInt(100000, 999999));
     const otpSecret = await bcrypt.hash(otp, 10);
@@ -22,18 +21,18 @@ export async function POST(req: NextRequest) {
       data: {
         otp: otpSecret,
         email: data.email,
-        visit_id: "cmfv9v94z0009dcfo8y5xa3ay",
+        visit_id,
         expire_at,
       },
     });
-    // await prisma.pending_user.create({
-    //   data: {
-    //     email: data.email,
-    //     name: data.name,
-    //     password: passSecret,
-    //     visit_id,
-    //   },
-    // });
+    await prisma.pending_user.create({
+      data: {
+        email: data.email,
+        name: data.name,
+        password: passSecret,
+        visit_id,
+      },
+    });
     return NextResponse.json({ otp, status: 201 });
   } catch (err) {
     return NextResponse.json({
