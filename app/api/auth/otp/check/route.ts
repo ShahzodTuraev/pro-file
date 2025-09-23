@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
+import { signIn } from "@/lib/auth";
 export async function POST(req: NextRequest) {
   try {
     const data: { otp: string } = await req.json();
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
           orderBy: { created_at: "desc" },
         });
         if (user && visit_id) {
-          await prisma.user_list.create({
+          const savedUser = await prisma.user_list.create({
             data: {
               username: user?.name,
               email: user?.email,
@@ -34,6 +35,16 @@ export async function POST(req: NextRequest) {
               visit_id,
               auth_type: "EMAIL_PASS",
             },
+            select: { id: true, username: true, email: true },
+          });
+          await prisma.pending_user.deleteMany({
+            where: { email: user?.email },
+          });
+          await signIn("credentials", {
+            id: savedUser?.id,
+            email: savedUser?.email,
+            username: savedUser?.username,
+            redirect: false,
           });
         }
         return NextResponse.json({

@@ -2,17 +2,6 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 
-// 🔹 Example in-memory users (replace with DB later)
-const users = [
-  {
-    id: "1",
-    name: "Demo User",
-    email: "shon@naver.com",
-    test: "woo",
-    password: "12345",
-  },
-];
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -23,24 +12,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
-        type: { label: "Type", type: "text" },
+        username: { label: "username", type: "text" },
+        id: { label: "Id", type: "text" },
       },
       async authorize(credentials) {
-        console.log("credentials:::", credentials);
-        if (credentials?.type === "sign-up")
-          if (!credentials?.email || !credentials?.password) return null;
-
-        const user = users.find((u) => u.email === credentials.email);
-        if (!user) return null;
-
-        const isValid = credentials.password === user.password;
-        if (!isValid) return null;
+        if (!credentials?.email || !credentials?.id || !credentials?.username) {
+          return null;
+        }
 
         return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
+          id: String(credentials?.id),
+          name: String(credentials?.username),
+          email: String(credentials?.email),
         };
       },
     }),
