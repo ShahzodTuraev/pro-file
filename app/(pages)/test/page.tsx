@@ -18,7 +18,8 @@ export default function AuthForm() {
       password,
       redirect: false, // stay on page to handle error manually
     });
-
+    console.log("--------------------------------------------");
+    console.log(res);
     if (res?.error) {
       setError("Invalid email or password");
     } else {

@@ -3,7 +3,6 @@ import { randomInt } from "crypto";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
-import { sendOtpEmail } from "@/lib/emailer";
 export async function POST(req: NextRequest) {
   try {
     const data: {
@@ -42,7 +41,6 @@ export async function POST(req: NextRequest) {
         visit_id,
       },
     });
-    await sendOtpEmail(data.email, otp);
     return NextResponse.json({ otp, status: 201 });
   } catch (err) {
     return NextResponse.json({

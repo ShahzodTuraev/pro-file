@@ -12,10 +12,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text" },
-        username: { label: "username", type: "text" },
+        username: { label: "Username", type: "text" },
         id: { label: "Id", type: "text" },
       },
       async authorize(credentials) {
+        console.log({ credentials });
         if (!credentials?.email || !credentials?.id || !credentials?.username) {
           return null;
         }
