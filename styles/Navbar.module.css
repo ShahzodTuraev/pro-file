@@ -1,0 +1,51 @@
+.container {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 5px 20px 0 rgba(11, 7, 110, 0.04);
+  padding: 10px 24px;
+}
+
+.logo {
+  font-weight: 700;
+}
+
+.navList {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 250px;
+}
+.navList nav {
+  cursor: pointer;
+}
+.navList nav:hover {
+  transition: all 0.3s;
+}
+.authBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  font-weight: 600;
+}
+
+.authBox p:nth-child(1) {
+  cursor: pointer;
+}
+.authBox p:nth-child(1):hover {
+  transition: all 0.3s;
+  color: #4e4e4e;
+}
+.authBox p:nth-child(2) {
+  background: #5340ff;
+  color: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.authBox p:nth-child(2):hover {
+  background: blue;
+  transition: 0.2s;
+}
