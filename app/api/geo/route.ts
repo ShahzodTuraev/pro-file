@@ -1,11 +1,16 @@
 import { geolocation } from "@vercel/functions";
-
-export function GET(request: Request) {
-  const data = geolocation(request);
-  return new Response(
-    `<h1>Your location is ${data.countryRegion}, ${data.city}, ${data.region}, ${data.latitude}, ${data.longitude}</h1>`,
-    {
-      headers: { "content-type": "text/html" },
-    }
-  );
+import { NextResponse } from "next/server";
+export async function GET(request: Request) {
+  try {
+    const data = geolocation(request);
+    return NextResponse.json({
+      data,
+      status: 200,
+    });
+  } catch (err) {
+    return NextResponse.json({
+      status: 500,
+      message: err,
+    });
+  }
 }
