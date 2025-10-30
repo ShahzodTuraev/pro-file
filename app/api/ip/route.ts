@@ -13,6 +13,7 @@ export async function GET(request: Request) {
 
   // Extract location information from Vercel geo headers
   const country = headers.get("x-vercel-ip-country") || "Unknown";
+  const ips = headers.get("x-vercel-ip") || "Unknown";
   const region = headers.get("x-vercel-ip-country-region") || "Unknown";
   const city = headers.get("x-vercel-ip-city") || "Unknown";
   const latitude = headers.get("x-vercel-ip-latitude") || null;
@@ -26,6 +27,7 @@ export async function GET(request: Request) {
       city,
       latitude,
       longitude,
+      ips,
     },
   };
 
