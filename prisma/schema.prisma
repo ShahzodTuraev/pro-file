@@ -37,12 +37,6 @@ enum Auth_type {
 model visit_list{
   id                      String                  @default(cuid()) @id
   ip                      String
-  country                 String
-  country_code            String
-  region                  String
-  city                    String
-  lat                     String
-  lon                     String
   created_at              DateTime                @default(now())
   updated_at              DateTime                @updatedAt
   user_list               user_list[]
@@ -104,10 +98,15 @@ model template_connect{
 
 model location_data{
   id                      String                  @default(cuid()) @id
-  template_connect        template_connect        @relation(fields: [temp_connect_id], references: [id])
-  temp_connect_id         String
-  lat                     String
-  lon                     String
+  visit_id                String?
+  country                 String?
+  country_region          String?
+  region                  String?
+  city                    String?
+  template_connect        template_connect?       @relation(fields: [temp_connect_id], references: [id])
+  temp_connect_id         String?
+  latitude                String?
+  longitude               String?
   created_at              DateTime                @default(now())
   updated_at              DateTime                @updatedAt
   template_data           template_data[]
