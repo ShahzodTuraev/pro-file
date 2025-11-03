@@ -20,20 +20,21 @@ export async function GET(request: Request) {
     const longitude = geoData?.longitude
       ? { longitude: geoData?.longitude }
       : {};
-    const data = {
-      ...city,
-      ...country,
-      ...country_region,
-      ...region,
-      ...latitude,
-      ...longitude,
-    };
 
     if (!vid) {
       const vid = await prisma.visit_list.create({
         data: { ip },
         select: { id: true },
       });
+      const data = {
+        visit_id: vid.id,
+        ...city,
+        ...country,
+        ...country_region,
+        ...region,
+        ...latitude,
+        ...longitude,
+      };
       const lid = await prisma.location_data.create({
         data,
         select: { id: true },
