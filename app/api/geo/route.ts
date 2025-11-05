@@ -9,7 +9,6 @@ export async function GET(request: Request) {
 
     const geoData = geolocation(request);
     const ip = ipAddress(request) || "unknown";
-    console.log({ ip, geoData });
     const city = geoData?.city ? { city: geoData?.city } : {};
     const country = geoData?.country ? { country: geoData?.country } : {};
     const country_region = geoData?.countryRegion
@@ -20,27 +19,21 @@ export async function GET(request: Request) {
     const longitude = geoData?.longitude
       ? { longitude: geoData?.longitude }
       : {};
-
+    const data = {
+      ip,
+      ...city,
+      ...country,
+      ...country_region,
+      ...region,
+      ...latitude,
+      ...longitude,
+    };
     if (!vid) {
       const vid = await prisma.visit_list.create({
-        data: { ip },
-        select: { id: true },
-      });
-      const data = {
-        visit_id: vid.id,
-        ...city,
-        ...country,
-        ...country_region,
-        ...region,
-        ...latitude,
-        ...longitude,
-      };
-      const lid = await prisma.location_data.create({
         data,
         select: { id: true },
       });
       cookieStore.set("VID", vid?.id);
-      cookieStore.set("lid", lid?.id);
       return NextResponse.json({
         VID: vid?.id,
         status: 201,
