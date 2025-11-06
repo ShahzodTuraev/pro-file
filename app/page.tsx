@@ -1,15 +1,13 @@
 "use client";
 
+import MainPage from "@/components/main";
 import Navbar from "@/components/navbar";
-import { useIp } from "@/hooks/useIp";
 
 export default function Home() {
-  useIp();
-
   return (
     <main>
       <Navbar />
-      <div style={{}}>box</div>
+      <MainPage />
     </main>
   );
 }

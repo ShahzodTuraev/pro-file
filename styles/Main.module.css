@@ -1,0 +1,52 @@
+.boxWrap {
+  display: flex;
+  justify-content: center;
+}
+.box {
+  display: flex;
+  justify-content: baseline;
+  margin: 0 5rem;
+  width: 100%;
+}
+.head {
+  color: #111111;
+  display: flex;
+}
+
+.textHead {
+  padding: 4rem 0;
+  width: 50%;
+}
+.textHead h1 {
+  font-size: 4rem;
+}
+.head p {
+  margin: 2rem 0;
+  color: #2f2f2f;
+  font-size: 22px;
+  line-height: 1.8rem;
+  height: 27vh;
+}
+
+.slideHead {
+  position: relative;
+  width: 50%;
+}
+.bioTemp {
+  border-radius: 10px;
+  position: absolute;
+  right: 10px;
+  top: 30px;
+  height: auto;
+  /* box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; */
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+.cardTemp {
+  position: absolute;
+  left: 7rem;
+  bottom: 4rem;
+  height: auto;
+  z-index: 2;
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
