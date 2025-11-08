@@ -1,13 +1,13 @@
 "use client";
 
-import MainPage from "@/components/main";
+import Introduction from "@/components/home/intro";
 import Navbar from "@/components/navbar";
 
 export default function Home() {
   return (
     <main>
       <Navbar />
-      <MainPage />
+      <Introduction />
     </main>
   );
 }

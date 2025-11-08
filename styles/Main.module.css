@@ -5,7 +5,7 @@
 .box {
   display: flex;
   justify-content: baseline;
-  margin: 0 5rem;
+  max-width: 1280px;
   width: 100%;
 }
 .head {
@@ -15,19 +15,33 @@
 
 .textHead {
   padding: 4rem 0;
+  padding-left: 2rem;
   width: 50%;
 }
 .textHead h1 {
   font-size: 4rem;
+  color: #252525;
 }
 .head p {
-  margin: 2rem 0;
+  margin: 3rem 0;
   color: #2f2f2f;
   font-size: 22px;
   line-height: 1.8rem;
-  height: 27vh;
 }
-
+.btnWrap {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+/* .btnWrap button {
+  background: #5340ff;
+  color: #fff;
+  padding: 15px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
+} */
 .slideHead {
   position: relative;
   width: 50%;
@@ -35,18 +49,62 @@
 .bioTemp {
   border-radius: 10px;
   position: absolute;
-  right: 10px;
-  top: 30px;
+  right: 1rem;
+  top: 4rem;
   height: auto;
-  /* box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px; */
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 .cardTemp {
   position: absolute;
-  left: 7rem;
-  bottom: 4rem;
+  left: 12rem;
+  bottom: 2rem;
   height: auto;
   z-index: 2;
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ff7b7b;
+  border-radius: 20px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.inputBox {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 10px 16px;
+}
+
+.prefix {
+  font-size: 18px;
+  color: #333;
+}
+
+.input {
+  border: none;
+  outline: none;
+  font-size: 18px;
+  color: #888;
+  width: 120px;
+  margin-left: 2px;
+}
+
+.button {
+  background: linear-gradient(90deg, #ff5f6d, #d64fa4);
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 0 20px 20px 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.button:hover {
+  opacity: 0.9;
 }
