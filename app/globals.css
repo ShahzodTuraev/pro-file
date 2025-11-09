@@ -1,19 +1,21 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 /* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
 } */
-
+:root {
+  --gradient-1: #667eea;
+  --gradient-2: #764ba2;
+  --gradient-3: #f093fb;
+  --gradient-4: #f5576c;
+}
 html,
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  background-color: #f9fafb;
+  color: #111827;
 }
 
 body {

@@ -1,58 +1,112 @@
-.main {
-  display: flex;
-  justify-content: center;
-  height: 70px;
-  box-shadow: 0 5px 20px 0 rgba(11, 7, 110, 0.04);
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background 0.3s ease;
 }
+
+.header.scrolled {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.nav {
+  padding: 1rem 0;
+}
+
 .container {
   max-width: 1280px;
-  width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* padding: 1rem 6rem; */
-  width: 1280px;
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logoIcon {
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(to right, #3b82f6, #9333ea);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: white;
+}
+
+.logoText {
+  font-size: 1.25rem;
   font-weight: 700;
+  background: linear-gradient(to right, #2563eb, #9333ea);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.navList {
-  display: flex;
-  justify-content: space-between;
+.navLinks {
+  display: none;
   align-items: center;
-  width: 250px;
-}
-.navList nav {
-  cursor: pointer;
-}
-.navList nav:hover {
-  transition: all 0.3s;
-}
-.authBox {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  font-weight: 600;
+  gap: 2rem;
 }
 
-.authBox p:nth-child(1) {
+@media (min-width: 768px) {
+  .navLinks {
+    display: flex;
+  }
+}
+
+.navLink {
+  color: #4b5563;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.navLink:hover {
+  color: #2563eb;
+}
+
+.navButtons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.signInBtn {
+  color: #4b5563;
+  background: none;
+  border: none;
   cursor: pointer;
+  transition: color 0.3s ease;
 }
-.authBox p:nth-child(1):hover {
-  transition: all 0.3s;
-  color: #4e4e4e;
+
+.signInBtn:hover {
+  color: #2563eb;
 }
-.authBox p:nth-child(2) {
-  background: #5340ff;
-  color: #fff;
-  padding: 15px;
-  border-radius: 12px;
+
+.getStartedBtn {
+  background: linear-gradient(to right, #3b82f6, #9333ea);
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
   cursor: pointer;
+  transition: box-shadow 0.3s ease;
 }
-.authBox p:nth-child(2):hover {
-  background: blue;
-  transition: 0.2s;
+
+.getStartedBtn:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }

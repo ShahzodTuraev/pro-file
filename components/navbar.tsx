@@ -1,20 +1,51 @@
 "use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { User } from "lucide-react";
 import styles from "@/styles/Navbar.module.css";
-export default function Navbar() {
+
+export default function Header() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <main className={styles.main}>
-      <div className={styles.container}>
-        <h2 className={styles.logo}>ProFile</h2>
-        <div className={styles.navList}>
-          <nav>Templates</nav>
-          <nav>FAQ</nav>
-          <nav>Blog</nav>
+    <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
+      <nav className={styles.nav}>
+        <div className={styles.container}>
+          <div className={styles.logo}>
+            <div className={styles.logoIcon}>
+              <User className={styles.icon} />
+            </div>
+            <span className={styles.logoText}>pro-file.top</span>
+          </div>
+
+          <div className={styles.navLinks}>
+            <Link href="#features" className={styles.navLink}>
+              Features
+            </Link>
+            <Link href="#pricing" className={styles.navLink}>
+              Pricing
+            </Link>
+            <Link href="#contact" className={styles.navLink}>
+              Contact
+            </Link>
+          </div>
+
+          <div className={styles.navButtons}>
+            <button className={styles.signInBtn}>Sign In</button>
+            <button className={styles.getStartedBtn}>Get Started</button>
+          </div>
         </div>
-        <div className={styles.authBox}>
-          <p>Log in</p>
-          <p>Sign up</p>
-        </div>
-      </div>
-    </main>
+      </nav>
+    </header>
   );
 }

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Pro-file",
-  description: "Create your profile link and cards",
+  description: "Your all-in-one digital identity platform",
 };
 
 export default function RootLayout({
