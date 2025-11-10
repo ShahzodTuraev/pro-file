@@ -23,6 +23,7 @@
   padding: 0 1rem;
   display: flex;
   align-items: center;
+  font-size: 18px;
   justify-content: space-between;
 }
 
@@ -30,6 +31,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  cursor: pointer;
 }
 
 .logoIcon {
@@ -87,6 +89,8 @@
 
 .signInBtn {
   color: #4b5563;
+  font-size: 18px;
+  font-weight: 500;
   background: none;
   border: none;
   cursor: pointer;
@@ -100,8 +104,10 @@
 .getStartedBtn {
   background: linear-gradient(to right, #3b82f6, #9333ea);
   color: white;
-  padding: 0.5rem 1.5rem;
+  padding: 1rem 1.5rem;
   border-radius: 0.5rem;
+  font-size: 18px;
+  font-weight: 500;
   border: none;
   cursor: pointer;
   transition: box-shadow 0.3s ease;

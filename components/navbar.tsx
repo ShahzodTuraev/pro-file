@@ -25,7 +25,7 @@ export default function Header() {
             <div className={styles.logoIcon}>
               <User className={styles.icon} />
             </div>
-            <span className={styles.logoText}>pro-file.top</span>
+            <span className={styles.logoText}>ProFile</span>
           </div>
 
           <div className={styles.navLinks}>
