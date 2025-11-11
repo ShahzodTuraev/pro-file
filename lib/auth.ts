@@ -44,7 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === "google") {
         try {
           const res = await axios.post(
-            "http://localhost:3000/api/auth/google-auth",
+            "https://pro-file-two.vercel.app/api/auth/google-auth",
             { ...user, visit_id: visit_id }
           );
 
