@@ -60,8 +60,8 @@ model user_list{
   auth_type               Auth_type               @default(EMAIL_PASS)
   role                    User_role               @default(ADMIN)
   status                  General_status          @default(ACTIVE)
-  visit                   visit_list              @relation(fields: [visit_id], references: [id])
-  visit_id                String
+  visit                   visit_list?             @relation(fields: [visit_id], references: [id])
+  visit_id                String?
   img_url                 String?
   link                    String?
   created_at              DateTime                @default(now())

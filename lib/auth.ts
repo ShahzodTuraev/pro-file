@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+import axios from "axios";
+import { cookies } from "next/headers";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -12,18 +14,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text" },
-        username: { label: "Username", type: "text" },
         id: { label: "Id", type: "text" },
       },
       async authorize(credentials) {
         console.log({ credentials });
-        if (!credentials?.email || !credentials?.id || !credentials?.username) {
+        if (!credentials?.email || !credentials?.id) {
           return null;
         }
 
         return {
           id: String(credentials?.id),
-          name: String(credentials?.username),
           email: String(credentials?.email),
         };
       },
@@ -38,8 +38,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     maxAge: 60 * 60 * 24 * 10, // JWT expires after 10 day
   },
   callbacks: {
-    async signIn({ account }) {
-      console.log("provider:::", account?.provider);
+    async signIn({ account, user }) {
+      const cookieStore = await cookies();
+      const visit_id = cookieStore.get("VID")?.value || null;
+      if (account?.provider === "google") {
+        try {
+          const res = await axios.post(
+            "http://localhost:3000/api/auth/google-auth",
+            { ...user, visit_id: visit_id }
+          );
+
+          // ✅ Store user_id in the user object so it can be accessed in jwt callback
+          user.id = res.data?.userId;
+        } catch (error) {
+          console.error("Error in signIn callback:", error);
+          return false; // Reject sign in if API call fails
+        }
+      }
       return true;
     },
     // 🔹 Customize JWT
@@ -48,6 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.email = user.email;
       }
+
       return token;
     },
     // 🔹 Send user data to client

@@ -39,6 +39,8 @@ export async function GET(request: Request) {
         status: 201,
       });
     }
+    const visit_id = cookieStore.get("VID")?.value || "";
+    console.log({ visit_id });
     return NextResponse.json({
       city,
       ip,

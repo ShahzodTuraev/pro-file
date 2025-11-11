@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 
@@ -12,18 +13,14 @@ export default function AuthForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await signIn("credentials", {
-      email,
-      type: "sign-in-bro",
-      password,
-      redirect: false, // stay on page to handle error manually
-    });
-    console.log("--------------------------------------------");
-    console.log(res);
-    if (res?.error) {
-      setError("Invalid email or password");
-    } else {
-      window.location.href = "/test"; // redirect after login
+    try {
+      const res = await axios.post("/api/auth/sign-up", {
+        email,
+        password,
+      });
+      console.log("res:::", res);
+    } catch (error) {
+      console.log("signup error:::", error);
     }
   };
 
