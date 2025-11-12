@@ -17,7 +17,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         id: { label: "Id", type: "text" },
       },
       async authorize(credentials) {
-        console.log({ credentials });
         if (!credentials?.email || !credentials?.id) {
           return null;
         }
@@ -44,7 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === "google") {
         try {
           const res = await axios.post(
-            "https://pro-file-two.vercel.app/api/auth/google-auth",
+            `${process.env.API_LINK}/api/auth/google-auth`,
             { ...user, visit_id: visit_id }
           );
 
@@ -73,6 +72,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.email = token.email;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      return `${baseUrl}`;
     },
   },
 });

@@ -4,7 +4,6 @@ import styles from "./AuthPage.module.css";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Button,
   FormControl,
   IconButton,
   InputAdornment,
@@ -14,6 +13,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import Logo from "../logo/Logo";
+import { signIn } from "next-auth/react";
 export default function AuthPage() {
   // INITIALIZATION
   const router = useRouter();
@@ -49,26 +49,23 @@ export default function AuthPage() {
         <div onClick={() => router.push("/")}>
           <Logo />
         </div>
-        <div className={styles.headerActions}>
-          <p>{pageData.headText}</p>
-          <Link href={pageData.headPath}>{pageData.headLink}</Link>
-        </div>
       </div>
       <div className={styles.formContainer}>
         <h2>{pageData.header}</h2>
         <form className={styles.form} action="">
           <TextField
-            id="outlined-basic"
             label="Email"
             error={false}
             variant="outlined"
             size="small"
+            required
           />
           {path === "/signup" && (
             <TextField
               id="outlined-basic"
               // label="Password"
               type="text"
+              required
               slotProps={{
                 input: {
                   startAdornment: (
@@ -85,10 +82,16 @@ export default function AuthPage() {
             />
           )}
 
-          <FormControl sx={{ width: "100%" }} size="small" variant="outlined">
+          <FormControl
+            required
+            sx={{ width: "100%" }}
+            size="small"
+            variant="outlined"
+          >
             <InputLabel htmlFor="outlined-adornment-password">
               Password
             </InputLabel>
+
             <OutlinedInput
               id="outlined-adornment-password"
               type={showPassword ? "text" : "password"}
@@ -120,7 +123,7 @@ export default function AuthPage() {
           <p>Or</p>
           <div />
         </div>
-        <button className={styles.googleBtn}>
+        <button onClick={() => signIn("google")} className={styles.googleBtn}>
           <span className={styles.googleIcon}>
             <svg
               width="18"
@@ -154,8 +157,8 @@ export default function AuthPage() {
         </button>
       </div>
       <div className={styles.footer}>
-        By signing up, you agree to our <Link href={"#"}>Terms of Service</Link>{" "}
-        and <br /> <Link href={"#"}>Privacy Policy</Link>.
+        <p>{pageData.headText}</p>
+        <Link href={pageData.headPath}>{pageData.headLink}</Link>{" "}
       </div>
     </main>
   );

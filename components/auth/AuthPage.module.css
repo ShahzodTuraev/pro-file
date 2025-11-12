@@ -15,16 +15,6 @@
   align-items: center;
   box-shadow: rgba(0, 0, 0, 0.16) 0px 0px 2px;
 }
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.headerActions a {
-  color: #366feb;
-  text-decoration: underline;
-}
-
 .formContainer {
   margin-top: 5rem;
   background: #ffffff;
@@ -94,6 +84,9 @@
   border: 1px solid #0a0b0d;
 }
 .footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 1rem;
   font-size: 0.875rem;
   color: #6b7280;
@@ -102,6 +95,7 @@
 }
 .footer a {
   text-decoration: underline;
+  color: #3b82f6;
 }
 
 @media (max-width: 768px) {
