@@ -1,5 +1,5 @@
 "use client";
-import { Eye, EyeOff, User } from "lucide-react";
+import { ActivityIcon, CheckIcon, Eye, EyeOff } from "lucide-react";
 import styles from "./AuthPage.module.css";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -11,14 +11,40 @@ import {
   OutlinedInput,
   TextField,
 } from "@mui/material";
-import { useState } from "react";
+import { useReducer, useState } from "react";
 import Logo from "../logo/Logo";
 import { signIn } from "next-auth/react";
+import { Action, State } from "@/interfaces/authpage.type";
+const initialState: State = {
+  name: "",
+  email: "",
+  password: "",
+  showPassword: false,
+  otp: "",
+};
+const formReducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case "SET_NAME":
+      return { ...state, name: action.payload };
+    case "SET_EMAIL":
+      return { ...state, email: action.payload };
+    case "SET_PASSWORD":
+      return { ...state, password: action.payload };
+    case "SET_SHOW_PASSWORD":
+      return { ...state, showPassword: action.payload };
+    case "SET_OTP":
+      return { ...state, otp: action.payload };
+    case "RESET":
+      return initialState;
+    default:
+      return state;
+  }
+};
 export default function AuthPage() {
   // INITIALIZATION
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
   const path = usePathname();
+  const [showPassword, setShowPassword] = useState(false);
   const pageData = {
     headText:
       path === "/signup"
@@ -31,6 +57,8 @@ export default function AuthPage() {
     googleButton:
       path === "/signup" ? "Sign Up With Google" : "Sign In With Google",
   };
+
+  const [state, dispatch] = useReducer(formReducer, initialState);
   // HANDLER
   const handleMouseDownPassword = (
     event: React.MouseEvent<HTMLButtonElement>
@@ -63,7 +91,6 @@ export default function AuthPage() {
           {path === "/signup" && (
             <TextField
               id="outlined-basic"
-              // label="Password"
               type="text"
               required
               slotProps={{
@@ -71,6 +98,11 @@ export default function AuthPage() {
                   startAdornment: (
                     <InputAdornment position="start">
                       pro-file.top/
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <CheckIcon style={{ display: "none" }} />
                     </InputAdornment>
                   ),
                 },
@@ -86,6 +118,7 @@ export default function AuthPage() {
             required
             sx={{ width: "100%" }}
             size="small"
+            disabled={true}
             variant="outlined"
           >
             <InputLabel htmlFor="outlined-adornment-password">
@@ -115,7 +148,27 @@ export default function AuthPage() {
               label="Password"
             />
           </FormControl>
-
+          <FormControl variant="outlined">
+            <OutlinedInput
+              size="small"
+              placeholder="Paste OTP"
+              onKeyPress={(e) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              endAdornment={
+                <InputAdornment position="end">
+                  <span
+                    className={styles.otpResend}
+                    onClick={() => console.log("Resend clicked")}
+                  >
+                    Resend
+                  </span>
+                </InputAdornment>
+              }
+            />
+          </FormControl>
           <button className={styles.primaryBtn}>{pageData.mainButton}</button>
         </form>
         <div className={styles.wallBox}>

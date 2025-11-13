@@ -98,6 +98,12 @@
   color: #3b82f6;
 }
 
+.otpResend {
+  cursor: pointer;
+  color: #878787;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .authPage {
     background: #ffffff;
