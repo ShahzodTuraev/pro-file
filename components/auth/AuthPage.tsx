@@ -14,32 +14,8 @@ import {
 import { useReducer, useState } from "react";
 import Logo from "../logo/Logo";
 import { signIn } from "next-auth/react";
-import { Action, State } from "@/interfaces/authpage.type";
-const initialState: State = {
-  name: "",
-  email: "",
-  password: "",
-  showPassword: false,
-  otp: "",
-};
-const formReducer = (state: State, action: Action): State => {
-  switch (action.type) {
-    case "SET_NAME":
-      return { ...state, name: action.payload };
-    case "SET_EMAIL":
-      return { ...state, email: action.payload };
-    case "SET_PASSWORD":
-      return { ...state, password: action.payload };
-    case "SET_SHOW_PASSWORD":
-      return { ...state, showPassword: action.payload };
-    case "SET_OTP":
-      return { ...state, otp: action.payload };
-    case "RESET":
-      return initialState;
-    default:
-      return state;
-  }
-};
+import { formReducer, initialState, State } from "./authReducer";
+
 export default function AuthPage() {
   // INITIALIZATION
   const router = useRouter();
@@ -59,6 +35,7 @@ export default function AuthPage() {
   };
 
   const [state, dispatch] = useReducer(formReducer, initialState);
+  console.log("State:", state);
   // HANDLER
   const handleMouseDownPassword = (
     event: React.MouseEvent<HTMLButtonElement>
@@ -69,6 +46,15 @@ export default function AuthPage() {
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
+  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, type, value, checked } = e.target;
+    console.log({ name, type, value, checked });
+    dispatch({
+      type: "FIELD_CHANGE",
+      field: name as keyof State,
+      value: type === "checkbox" ? checked : value,
+    });
   };
 
   return (
@@ -83,15 +69,18 @@ export default function AuthPage() {
         <form className={styles.form} action="">
           <TextField
             label="Email"
+            name="email"
             error={false}
             variant="outlined"
             size="small"
             required
+            onChange={handleChange}
           />
           {path === "/signup" && (
             <TextField
               id="outlined-basic"
               type="text"
+              name="link"
               required
               slotProps={{
                 input: {
@@ -126,6 +115,7 @@ export default function AuthPage() {
             </InputLabel>
 
             <OutlinedInput
+              name="password"
               id="outlined-adornment-password"
               type={showPassword ? "text" : "password"}
               endAdornment={
@@ -148,28 +138,33 @@ export default function AuthPage() {
               label="Password"
             />
           </FormControl>
-          <FormControl variant="outlined">
-            <OutlinedInput
-              size="small"
-              placeholder="Paste OTP"
-              onKeyPress={(e) => {
-                if (!/[0-9]/.test(e.key)) {
-                  e.preventDefault();
+          {path === "/signup" && state.sentOtp && (
+            <FormControl variant="outlined">
+              <OutlinedInput
+                size="small"
+                name="otp"
+                placeholder="Paste OTP"
+                onKeyPress={(e) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <span
+                      className={styles.otpResend}
+                      onClick={() => console.log("Resend clicked")}
+                    >
+                      Resend
+                    </span>
+                  </InputAdornment>
                 }
-              }}
-              endAdornment={
-                <InputAdornment position="end">
-                  <span
-                    className={styles.otpResend}
-                    onClick={() => console.log("Resend clicked")}
-                  >
-                    Resend
-                  </span>
-                </InputAdornment>
-              }
-            />
-          </FormControl>
-          <button className={styles.primaryBtn}>{pageData.mainButton}</button>
+              />
+            </FormControl>
+          )}
+          <button type="submit" className={styles.primaryBtn}>
+            {pageData.mainButton}
+          </button>
         </form>
         <div className={styles.wallBox}>
           <div />
