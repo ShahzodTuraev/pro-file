@@ -15,6 +15,7 @@ import { useReducer, useState } from "react";
 import Logo from "../logo/Logo";
 import { signIn } from "next-auth/react";
 import { formReducer, initialState, State } from "./authReducer";
+import axios from "axios";
 
 export default function AuthPage() {
   // INITIALIZATION
@@ -35,7 +36,7 @@ export default function AuthPage() {
   };
 
   const [state, dispatch] = useReducer(formReducer, initialState);
-  console.log("State:", state);
+  // console.log("State:", state);
   // HANDLER
   const handleMouseDownPassword = (
     event: React.MouseEvent<HTMLButtonElement>
@@ -49,14 +50,61 @@ export default function AuthPage() {
   };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, value, checked } = e.target;
-    console.log({ name, type, value, checked });
+    // console.log({ name, type, value, checked });
     dispatch({
       type: "FIELD_CHANGE",
       field: name as keyof State,
       value: type === "checkbox" ? checked : value,
     });
   };
+  const usernameHandler = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (/^[a-z0-9]+$/.test(value) || value.length === 0) {
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "username",
+        value: value,
+      });
+      setTimeout(async () => {
+        if (value.length >= 3) {
+          try {
+            const req = await axios.post("/api/link-check", {
+              username: value,
+            });
+            console.log("req data::::", req.data);
+            if (req.status === 200) {
+              dispatch({
+                type: "FIELD_CHANGE",
+                field: "usernameErrorMessage",
+                value: "",
+              });
+            }
+          } catch (error) {
+            if (axios.isAxiosError(error)) {
+              const errorMessage = error.response?.data || {
+                message: "An error occurred",
+              };
 
+              console.log("❌ Username Error:", errorMessage);
+              dispatch({
+                type: "FIELD_CHANGE",
+                field: "usernameErrorMessage",
+                value: errorMessage.message,
+              });
+            }
+            console.log("username Error:", error);
+          }
+        } else {
+          dispatch({
+            type: "FIELD_CHANGE",
+            field: "usernameErrorMessage",
+            value: "Username must be at least 3 characters",
+          });
+        }
+      }, 1000);
+    }
+  };
+  console.log("state:::", state.usernameErrorMessage);
   return (
     <main className={styles.authPage}>
       <div className={styles.header}>
@@ -66,7 +114,7 @@ export default function AuthPage() {
       </div>
       <div className={styles.formContainer}>
         <h2>{pageData.header}</h2>
-        <form className={styles.form} action="">
+        <form className={styles.form}>
           <TextField
             label="Email"
             name="email"
@@ -80,13 +128,15 @@ export default function AuthPage() {
             <TextField
               id="outlined-basic"
               type="text"
-              name="link"
+              name="username"
+              onChange={usernameHandler}
+              value={state.username}
               required
               slotProps={{
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      pro-file.top/
+                      <span>pro-file.top/</span>
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -97,9 +147,22 @@ export default function AuthPage() {
                 },
               }}
               variant="outlined"
-              helperText=""
-              // error={true}
+              helperText={state.usernameErrorMessage}
+              autoComplete="off"
               size="small"
+              // sx={{
+              //   "& .MuiOutlinedInput-root": {
+              //     "& fieldset": {
+              //       borderColor: "blue", // normal color
+              //     },
+              //     "&:hover fieldset": {
+              //       borderColor: "blue", // hover
+              //     },
+              //     "&.Mui-focused fieldset": {
+              //       borderColor: "blue", // focused color
+              //     },
+              //   },
+              // }}
             />
           )}
 
@@ -107,7 +170,6 @@ export default function AuthPage() {
             required
             sx={{ width: "100%" }}
             size="small"
-            disabled={true}
             variant="outlined"
           >
             <InputLabel htmlFor="outlined-adornment-password">
@@ -153,7 +215,7 @@ export default function AuthPage() {
                   <InputAdornment position="end">
                     <span
                       className={styles.otpResend}
-                      onClick={() => console.log("Resend clicked")}
+                      // onClick={() => console.log("Resend clicked")}
                     >
                       Resend
                     </span>

@@ -1,7 +1,10 @@
 export type State = {
   email: string;
   password: string;
-  link: string;
+  username: string;
+  usernameError: string | null;
+  isCheckingUsername: boolean;
+  usernameErrorMessage: "";
   showPassword: boolean;
   otp: string;
   sentOtp: boolean;
@@ -12,9 +15,12 @@ export type Action =
   | { type: "RESET" };
 
 export const initialState: State = {
-  link: "",
+  username: "",
+  usernameError: null,
+  usernameErrorMessage: "",
   email: "",
   password: "",
+  isCheckingUsername: false,
   showPassword: false,
   sentOtp: false,
   otp: "",
