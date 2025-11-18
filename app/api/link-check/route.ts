@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
+    console.log("request come");
     const body = await req.json();
     const cookieStore = await cookies();
     const username = body?.username;

@@ -1,9 +1,10 @@
 "use client";
-import { ActivityIcon, CheckIcon, Eye, EyeOff } from "lucide-react";
+import { CircleCheckBig, Eye, EyeOff } from "lucide-react";
 import styles from "./AuthPage.module.css";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  CircularProgress,
   FormControl,
   IconButton,
   InputAdornment,
@@ -11,17 +12,18 @@ import {
   OutlinedInput,
   TextField,
 } from "@mui/material";
-import { useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import Logo from "../logo/Logo";
 import { signIn } from "next-auth/react";
 import { formReducer, initialState, State } from "./authReducer";
-import axios from "axios";
+import { usernameCheck } from "@/services/auth.service";
+import { dangerSx, successSx } from "@/const/auth.conts";
 
 export default function AuthPage() {
   // INITIALIZATION
   const router = useRouter();
   const path = usePathname();
-  const [showPassword, setShowPassword] = useState(false);
+  const [debouncedValue, setDebouncedValue] = useState("");
   const pageData = {
     headText:
       path === "/signup"
@@ -36,6 +38,70 @@ export default function AuthPage() {
   };
 
   const [state, dispatch] = useReducer(formReducer, initialState);
+  // HANDLERS
+
+  // 1. Update `debouncedValue` only if input doesn’t change for 1 second
+  useEffect(() => {
+    if (state.username !== "") {
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "usernameStatus",
+        value: "loading",
+      });
+    }
+    const handler = setTimeout(() => {
+      setDebouncedValue(state.username);
+    }, 800); // 1 second debounce
+
+    return () => clearTimeout(handler);
+  }, [state.username]);
+
+  // 2. Trigger backend request when `debouncedValue` updates
+  const checkUserName = async () => {
+    const data = await usernameCheck(state.username);
+    console.log("come::::::::::", data);
+    if (data?.status === 200) {
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "usernameStatus",
+        value: data?.status.toString(),
+      });
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "usernameAlert",
+        value: "",
+      });
+    }
+    if (data?.status === 422) {
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "usernameStatus",
+        value: data?.status.toString(),
+      });
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "usernameAlert",
+        value: data?.data.message,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!debouncedValue) {
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "usernameAlert",
+        value: "",
+      });
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "usernameStatus",
+        value: null,
+      });
+      return;
+    }
+    checkUserName();
+  }, [debouncedValue]);
   // console.log("State:", state);
   // HANDLER
   const handleMouseDownPassword = (
@@ -49,62 +115,23 @@ export default function AuthPage() {
     event.preventDefault();
   };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, type, value, checked } = e.target;
+    const { name, value } = e.target;
     // console.log({ name, type, value, checked });
     dispatch({
       type: "FIELD_CHANGE",
       field: name as keyof State,
-      value: type === "checkbox" ? checked : value,
+      value:
+        name === "username"
+          ? /^[a-z0-9]+$/.test(value)
+            ? value
+            : value === ""
+            ? ""
+            : state.username
+          : value,
     });
   };
-  const usernameHandler = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (/^[a-z0-9]+$/.test(value) || value.length === 0) {
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "username",
-        value: value,
-      });
-      setTimeout(async () => {
-        if (value.length >= 3) {
-          try {
-            const req = await axios.post("/api/link-check", {
-              username: value,
-            });
-            console.log("req data::::", req.data);
-            if (req.status === 200) {
-              dispatch({
-                type: "FIELD_CHANGE",
-                field: "usernameErrorMessage",
-                value: "",
-              });
-            }
-          } catch (error) {
-            if (axios.isAxiosError(error)) {
-              const errorMessage = error.response?.data || {
-                message: "An error occurred",
-              };
+  console.log("State:::", state.usernameStatus);
 
-              console.log("❌ Username Error:", errorMessage);
-              dispatch({
-                type: "FIELD_CHANGE",
-                field: "usernameErrorMessage",
-                value: errorMessage.message,
-              });
-            }
-            console.log("username Error:", error);
-          }
-        } else {
-          dispatch({
-            type: "FIELD_CHANGE",
-            field: "usernameErrorMessage",
-            value: "Username must be at least 3 characters",
-          });
-        }
-      }, 1000);
-    }
-  };
-  console.log("state:::", state.usernameErrorMessage);
   return (
     <main className={styles.authPage}>
       <div className={styles.header}>
@@ -129,7 +156,7 @@ export default function AuthPage() {
               id="outlined-basic"
               type="text"
               name="username"
-              onChange={usernameHandler}
+              onChange={handleChange}
               value={state.username}
               required
               slotProps={{
@@ -141,28 +168,32 @@ export default function AuthPage() {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <CheckIcon style={{ display: "none" }} />
+                      {state.usernameStatus === "loading" && (
+                        <CircularProgress enableTrackSlot size="20px" />
+                      )}
+                      <CircleCheckBig
+                        style={
+                          state.usernameStatus === "200"
+                            ? { display: "block", color: "#70C050" }
+                            : { display: "none" }
+                        }
+                      />
                     </InputAdornment>
                   ),
                 },
               }}
               variant="outlined"
-              helperText={state.usernameErrorMessage}
+              error={state.usernameStatus === "422"}
+              helperText={state.usernameAlert}
               autoComplete="off"
               size="small"
-              // sx={{
-              //   "& .MuiOutlinedInput-root": {
-              //     "& fieldset": {
-              //       borderColor: "blue", // normal color
-              //     },
-              //     "&:hover fieldset": {
-              //       borderColor: "blue", // hover
-              //     },
-              //     "&.Mui-focused fieldset": {
-              //       borderColor: "blue", // focused color
-              //     },
-              //   },
-              // }}
+              sx={
+                state.usernameStatus === "200"
+                  ? successSx
+                  : state.usernameStatus === "422"
+                  ? dangerSx
+                  : {}
+              }
             />
           )}
 
@@ -179,21 +210,27 @@ export default function AuthPage() {
             <OutlinedInput
               name="password"
               id="outlined-adornment-password"
-              type={showPassword ? "text" : "password"}
+              type={state.showPassword ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
                   <IconButton
                     aria-label={
-                      showPassword
+                      state.showPassword
                         ? "hide the password"
                         : "display the password"
                     }
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => {
+                      dispatch({
+                        type: "FIELD_CHANGE",
+                        field: "showPassword",
+                        value: !state.showPassword,
+                      });
+                    }}
                     onMouseDown={handleMouseDownPassword}
                     onMouseUp={handleMouseUpPassword}
                     edge="end"
                   >
-                    {showPassword ? <Eye /> : <EyeOff />}
+                    {state.showPassword ? <Eye /> : <EyeOff />}
                   </IconButton>
                 </InputAdornment>
               }
