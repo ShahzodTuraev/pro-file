@@ -124,6 +124,8 @@ export default function AuthPage() {
         name === "username"
           ? /^[a-z0-9]+$/.test(value)
             ? value
+            : value === ""
+            ? ""
             : state.username
           : value,
     });
