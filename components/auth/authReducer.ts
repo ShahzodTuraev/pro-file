@@ -5,13 +5,15 @@ export type State = {
   usernameError: string | null;
   isCheckingUsername: boolean;
   usernameErrorMessage: "";
+  usernameStatus: null | string;
+  usernameAlert: string;
   showPassword: boolean;
   otp: string;
   sentOtp: boolean;
 };
 
 export type Action =
-  | { type: "FIELD_CHANGE"; field: keyof State; value: string | boolean }
+  | { type: "FIELD_CHANGE"; field: keyof State; value: string | boolean | null }
   | { type: "RESET" };
 
 export const initialState: State = {
@@ -20,6 +22,8 @@ export const initialState: State = {
   usernameErrorMessage: "",
   email: "",
   password: "",
+  usernameStatus: null,
+  usernameAlert: "",
   isCheckingUsername: false,
   showPassword: false,
   sentOtp: false,
