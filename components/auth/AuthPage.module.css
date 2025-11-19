@@ -45,7 +45,17 @@
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
+.primaryBtnDisable {
+  background: linear-gradient(to right, #9bbcfb, #c6a5f3);
+  color: white;
+  padding: 0.7rem 2rem;
+  border-radius: 0.3rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 .primaryBtn:hover {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
