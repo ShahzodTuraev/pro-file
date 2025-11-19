@@ -24,3 +24,18 @@ export const dangerSx = {
     },
   },
 };
+
+export const pathData = (path: string) => {
+  return {
+    headText:
+      path === "/signup"
+        ? "Already have an account?"
+        : "Don't have an account? ",
+    headLink: path === "/signup" ? "Sign in" : "Sign up",
+    headPath: path === "/signup" ? "/signin" : "/signup",
+    header: path === "/signup" ? "Create your account" : "Sign in",
+    mainButton: path === "/signup" ? "Sign Up With Email" : "Sign In",
+    googleButton:
+      path === "/signup" ? "Sign Up With Google" : "Sign In With Google",
+  };
+};

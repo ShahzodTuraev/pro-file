@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   CircularProgress,
   FormControl,
+  FormHelperText,
   IconButton,
   InputAdornment,
   InputLabel,
@@ -17,25 +18,19 @@ import Logo from "../logo/Logo";
 import { signIn } from "next-auth/react";
 import { formReducer, initialState, State } from "./authReducer";
 import { usernameCheck } from "@/services/auth.service";
-import { dangerSx, successSx } from "@/const/auth.conts";
+import { dangerSx, pathData, successSx } from "@/const/auth.conts";
+import z from "zod";
 
 export default function AuthPage() {
   // INITIALIZATION
   const router = useRouter();
   const path = usePathname();
+  const emailSchema = z.string().email("Invalid email format");
+  const passwordSchema = z
+    .string()
+    .min(8, "Password must be at least 8 characters");
   const [debouncedValue, setDebouncedValue] = useState("");
-  const pageData = {
-    headText:
-      path === "/signup"
-        ? "Already have an account?"
-        : "Don't have an account? ",
-    headLink: path === "/signup" ? "Sign in" : "Sign up",
-    headPath: path === "/signup" ? "/signin" : "/signup",
-    header: path === "/signup" ? "Create your account" : "Sign in",
-    mainButton: path === "/signup" ? "Sign Up With Email" : "Sign In",
-    googleButton:
-      path === "/signup" ? "Sign Up With Google" : "Sign In With Google",
-  };
+  const pageData = pathData(path);
 
   const [state, dispatch] = useReducer(formReducer, initialState);
   // HANDLERS
@@ -48,6 +43,11 @@ export default function AuthPage() {
         field: "usernameStatus",
         value: "loading",
       });
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "usernameAlert",
+        value: "",
+      });
     }
     const handler = setTimeout(() => {
       setDebouncedValue(state.username);
@@ -59,7 +59,6 @@ export default function AuthPage() {
   // 2. Trigger backend request when `debouncedValue` updates
   const checkUserName = async () => {
     const data = await usernameCheck(state.username);
-    console.log("come::::::::::", data);
     if (data?.status === 200) {
       dispatch({
         type: "FIELD_CHANGE",
@@ -102,7 +101,6 @@ export default function AuthPage() {
     }
     checkUserName();
   }, [debouncedValue]);
-  // console.log("State:", state);
   // HANDLER
   const handleMouseDownPassword = (
     event: React.MouseEvent<HTMLButtonElement>
@@ -116,22 +114,53 @@ export default function AuthPage() {
   };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // console.log({ name, type, value, checked });
     dispatch({
       type: "FIELD_CHANGE",
       field: name as keyof State,
       value:
         name === "username"
-          ? /^[a-z0-9]+$/.test(value)
-            ? value
+          ? /^[a-zA-Z0-9]+$/.test(value)
+            ? value.toLowerCase()
             : value === ""
             ? ""
             : state.username
           : value,
     });
   };
-  console.log("State:::", state.usernameStatus);
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    try {
+      e.preventDefault();
+      if (path === "/signup") {
+        const emailValidation = emailSchema.safeParse(state.email);
+        const passwordValidation = passwordSchema.safeParse(state.password);
+        dispatch({
+          type: "FIELD_CHANGE",
+          field: "emailAlert",
+          value: emailValidation.success
+            ? null
+            : emailValidation?.error?.issues[0].message,
+        });
+        dispatch({
+          type: "FIELD_CHANGE",
+          field: "passwordAlert",
+          value: passwordValidation.success
+            ? null
+            : passwordValidation?.error?.issues[0].message,
+        });
+
+        if (
+          emailValidation.success &&
+          passwordValidation.success &&
+          state.usernameStatus === "200"
+        ) {
+          console.log("ok");
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <main className={styles.authPage}>
       <div className={styles.header}>
@@ -141,15 +170,17 @@ export default function AuthPage() {
       </div>
       <div className={styles.formContainer}>
         <h2>{pageData.header}</h2>
-        <form className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           <TextField
             label="Email"
             name="email"
-            error={false}
+            type="email"
+            error={!!state.emailAlert}
             variant="outlined"
             size="small"
             required
             onChange={handleChange}
+            helperText={state.emailAlert}
           />
           {path === "/signup" && (
             <TextField
@@ -202,6 +233,7 @@ export default function AuthPage() {
             sx={{ width: "100%" }}
             size="small"
             variant="outlined"
+            error={!!state.passwordAlert} // error holatini ham shu yerga biriktirasiz
           >
             <InputLabel htmlFor="outlined-adornment-password">
               Password
@@ -210,22 +242,23 @@ export default function AuthPage() {
             <OutlinedInput
               name="password"
               id="outlined-adornment-password"
+              autoComplete="off"
               type={state.showPassword ? "text" : "password"}
+              onChange={handleChange}
+              value={state.password}
               endAdornment={
                 <InputAdornment position="end">
                   <IconButton
                     aria-label={
-                      state.showPassword
-                        ? "hide the password"
-                        : "display the password"
+                      state.showPassword ? "hide password" : "show password"
                     }
-                    onClick={() => {
+                    onClick={() =>
                       dispatch({
                         type: "FIELD_CHANGE",
                         field: "showPassword",
                         value: !state.showPassword,
-                      });
-                    }}
+                      })
+                    }
                     onMouseDown={handleMouseDownPassword}
                     onMouseUp={handleMouseUpPassword}
                     edge="end"
@@ -236,7 +269,10 @@ export default function AuthPage() {
               }
               label="Password"
             />
+
+            <FormHelperText>{state.passwordAlert}</FormHelperText>
           </FormControl>
+
           {path === "/signup" && state.sentOtp && (
             <FormControl variant="outlined">
               <OutlinedInput

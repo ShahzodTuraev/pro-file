@@ -1,10 +1,9 @@
 export type State = {
   email: string;
+  emailAlert: string | null;
   password: string;
+  passwordAlert: string | null;
   username: string;
-  usernameError: string | null;
-  isCheckingUsername: boolean;
-  usernameErrorMessage: "";
   usernameStatus: null | string;
   usernameAlert: string;
   showPassword: boolean;
@@ -18,13 +17,12 @@ export type Action =
 
 export const initialState: State = {
   username: "",
-  usernameError: null,
-  usernameErrorMessage: "",
   email: "",
+  emailAlert: null,
   password: "",
+  passwordAlert: null,
   usernameStatus: null,
   usernameAlert: "",
-  isCheckingUsername: false,
   showPassword: false,
   sentOtp: false,
   otp: "",
