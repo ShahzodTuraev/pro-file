@@ -1,16 +1,18 @@
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
-    console.log("request come");
     const body = await req.json();
-    const cookieStore = await cookies();
     const username = body?.username;
-    const vid = cookieStore.get("VID")?.value ?? "unknown";
     if (username.length < 3) {
       return NextResponse.json(
         { message: "Username must be at least 3 characters" },
+        { status: 422 }
+      );
+    }
+    if (username.length > 20) {
+      return NextResponse.json(
+        { message: "The username must not be greater than 20 characters." },
         { status: 422 }
       );
     }
