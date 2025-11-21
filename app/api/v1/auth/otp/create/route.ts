@@ -60,14 +60,19 @@ export async function POST(req: NextRequest) {
       },
     });
     // save encoded otp in database
-    await prisma.otp_list.create({
+    const otpData = await prisma.otp_list.create({
       data: {
         otp: otpSecret,
         email: body.email,
         visit_id: cookieStore.get("VID")?.value || anonVisit?.id || "unknown",
         expire_at,
       },
+      select: { id: true },
     });
+    cookieStore.set("otpid", otpData?.id, {
+      maxAge: 60 * 60, // 1 hour
+    });
+
     // send otp to user's email:
     await axios.post(
       "https://api.brevo.com/v3/smtp/email",

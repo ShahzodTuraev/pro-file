@@ -1,15 +1,10 @@
 import bcrypt from "bcrypt";
 
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { signIn } from "@/lib/auth";
 
-const signupSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
 export async function POST(req: NextRequest) {
   try {
     const body: { otp: string } = await req.json();
