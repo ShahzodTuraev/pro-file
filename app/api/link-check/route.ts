@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
     const check = await prisma.user_list.findFirst({
-      where: { link: username },
+      where: { username },
     });
     if (check) {
       return NextResponse.json(
