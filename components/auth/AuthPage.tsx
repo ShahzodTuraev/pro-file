@@ -152,7 +152,7 @@ export default function AuthPage() {
         if (
           emailValidation.success &&
           passwordValidation.success &&
-          state.usernameStatus === "201"
+          state.usernameStatus === "200"
         ) {
           const req = await sendOtp({
             email: state.email,
