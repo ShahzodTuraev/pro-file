@@ -163,7 +163,7 @@ model otp_list{
 
 model pending_user{
   id                      String                  @default(cuid()) @id
-  visit                   visit_list?              @relation(fields: [visit_id], references: [id])
+  visit                   visit_list?             @relation(fields: [visit_id], references: [id])
   visit_id                String?
   name                    String
   password                String
