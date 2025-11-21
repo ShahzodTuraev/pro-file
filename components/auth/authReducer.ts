@@ -6,9 +6,12 @@ export type State = {
   username: string;
   usernameStatus: null | string;
   usernameAlert: string;
+  disableSubmitBtn: null | string;
+  otpAlert: null | string;
   showPassword: boolean;
   otp: string;
   sentOtp: boolean;
+  isResend: boolean;
 };
 
 export type Action =
@@ -26,6 +29,9 @@ export const initialState: State = {
   showPassword: false,
   sentOtp: false,
   otp: "",
+  otpAlert: null,
+  disableSubmitBtn: null,
+  isResend: false,
 };
 export const formReducer = (state: State, action: Action): State => {
   switch (action.type) {

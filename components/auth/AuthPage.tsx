@@ -13,19 +13,26 @@ import {
   OutlinedInput,
   TextField,
 } from "@mui/material";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import Logo from "../logo/Logo";
 import { signIn } from "next-auth/react";
 import { formReducer, initialState, State } from "./authReducer";
-import { sendOtp, usernameCheck } from "@/services/auth.service";
+import {
+  checkOtp,
+  reSendOtp,
+  sendOtp,
+  usernameCheck,
+} from "@/services/auth.service";
 import { dangerSx, pathData, successSx } from "@/const/auth.conts";
 import z from "zod";
+import toast from "react-hot-toast";
 
 export default function AuthPage() {
   // INITIALIZATION
   const router = useRouter();
   const path = usePathname();
   const emailSchema = z.string().email("Invalid email format");
+  const formRef = useRef(null);
   const passwordSchema = z
     .string()
     .min(8, "Password must be at least 8 characters");
@@ -126,6 +133,13 @@ export default function AuthPage() {
             : state.username
           : value,
     });
+    if (name === "otp" && state.otp.length > 3) {
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "disableSubmitBtn",
+        value: null,
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -152,20 +166,90 @@ export default function AuthPage() {
         if (
           emailValidation.success &&
           passwordValidation.success &&
-          state.usernameStatus === "200"
+          state.usernameStatus === "200" &&
+          state.otp.length == 0
         ) {
+          dispatch({
+            type: "FIELD_CHANGE",
+            field: "disableSubmitBtn",
+            value: "loading",
+          });
           const req = await sendOtp({
             email: state.email,
             password: state.password,
             username: state.username,
           });
           console.log(req?.data);
-          if (req?.status === 200) {
+          if (req?.status === 201) {
+            dispatch({
+              type: "FIELD_CHANGE",
+              field: "emailAlert",
+              value: null,
+            });
+            dispatch({ type: "FIELD_CHANGE", field: "sentOtp", value: true });
+            dispatch({
+              type: "FIELD_CHANGE",
+              field: "disableSubmitBtn",
+              value: "disable",
+            });
+          } else if (req?.status === 409) {
+            dispatch({
+              type: "FIELD_CHANGE",
+              field: "emailAlert",
+              value: req.data?.message,
+            });
+          } else {
+            dispatch({
+              type: "FIELD_CHANGE",
+              field: "emailAlert",
+              value: "Something went wrong.",
+            });
+          }
+        }
+        if (state.otp.length > 3) {
+          dispatch({
+            type: "FIELD_CHANGE",
+            field: "disableSubmitBtn",
+            value: "loading",
+          });
+          const res = await checkOtp(state.otp);
+          console.log(res);
+          if (res?.status) {
+            dispatch({
+              type: "FIELD_CHANGE",
+              field: "disableSubmitBtn",
+              value: null,
+            });
+          }
+          if (res?.status === 403) {
+            dispatch({
+              type: "FIELD_CHANGE",
+              field: "otpAlert",
+              value: res.data.message,
+            });
+          }
+          if (res?.status === 200) {
+            router.push("/");
           }
         }
       }
     } catch (error) {
       console.log(error);
+    }
+  };
+  const reSendOtpHandler = async () => {
+    try {
+      dispatch({ type: "FIELD_CHANGE", field: "isResend", value: true });
+      const req = await reSendOtp();
+      if (req?.status == 201) {
+        toast.success("OTP sent to your email.", { duration: 2000 });
+        dispatch({ type: "FIELD_CHANGE", field: "isResend", value: false });
+      } else {
+        toast.error("Something went wrong.", { duration: 2000 });
+        dispatch({ type: "FIELD_CHANGE", field: "isResend", value: false });
+      }
+    } catch (error) {
+      throw error;
     }
   };
   return (
@@ -281,31 +365,64 @@ export default function AuthPage() {
           </FormControl>
 
           {path === "/signup" && state.sentOtp && (
-            <FormControl variant="outlined">
-              <OutlinedInput
-                size="small"
-                name="otp"
-                placeholder="Paste OTP"
-                onKeyPress={(e) => {
-                  if (!/[0-9]/.test(e.key)) {
-                    e.preventDefault();
+            <>
+              <FormControl variant="outlined">
+                <OutlinedInput
+                  size="small"
+                  name="otp"
+                  placeholder="Paste OTP"
+                  error={!!state.otpAlert}
+                  onChange={handleChange}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      {state.isResend ? (
+                        <CircularProgress enableTrackSlot size="20px" />
+                      ) : (
+                        <span
+                          className={styles.otpResend}
+                          onClick={reSendOtpHandler}
+                        >
+                          Resend
+                        </span>
+                      )}
+                    </InputAdornment>
                   }
-                }}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <span
-                      className={styles.otpResend}
-                      // onClick={() => console.log("Resend clicked")}
-                    >
-                      Resend
-                    </span>
-                  </InputAdornment>
-                }
-              />
-            </FormControl>
+                />
+                <FormHelperText>
+                  <span style={{ color: "#FF4963" }}>{state.otpAlert}</span>
+                </FormHelperText>
+              </FormControl>
+              <p>
+                Enter the 6-digit code we sent to your email. <br /> If you
+                don’t see it, check your spam folder.
+              </p>
+            </>
           )}
-          <button type="submit" className={styles.primaryBtn}>
-            {pageData.mainButton}
+          <button
+            disabled={
+              state.disableSubmitBtn === "disable" ||
+              state.disableSubmitBtn === "loading"
+            }
+            type="submit"
+            className={
+              state.disableSubmitBtn === "disable"
+                ? styles.primaryBtnDisable
+                : styles.primaryBtn
+            }
+          >
+            {state.disableSubmitBtn === "loading" ? (
+              <CircularProgress
+                size="1.120rem"
+                sx={{ color: "#fff", padding: 0 }}
+              />
+            ) : (
+              pageData.mainButton
+            )}
           </button>
         </form>
         <div className={styles.wallBox}>
