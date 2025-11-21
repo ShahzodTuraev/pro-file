@@ -1,3 +1,4 @@
+import { SignUpReqBody } from "@/interfaces/auth";
 import axios from "axios";
 
 export const usernameCheck = async (value: string) => {
@@ -8,9 +9,17 @@ export const usernameCheck = async (value: string) => {
     return req;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      const errorMessage = error.response?.data || {
-        message: "An error occurred",
-      };
+      return error.response;
+    }
+  }
+};
+
+export const sendOtp = async (data: SignUpReqBody) => {
+  try {
+    const req = await axios.post("/api/v1/auth/otp/create", data);
+    return req;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
       return error.response;
     }
   }

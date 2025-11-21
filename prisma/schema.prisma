@@ -63,7 +63,7 @@ model user_list{
   visit                   visit_list?             @relation(fields: [visit_id], references: [id])
   visit_id                String?
   img_url                 String?
-  link                    String?
+  name                    String?
   created_at              DateTime                @default(now())
   updated_at              DateTime                @updatedAt
   template_connect        template_connect[]

@@ -17,7 +17,7 @@ import { useEffect, useReducer, useState } from "react";
 import Logo from "../logo/Logo";
 import { signIn } from "next-auth/react";
 import { formReducer, initialState, State } from "./authReducer";
-import { usernameCheck } from "@/services/auth.service";
+import { sendOtp, usernameCheck } from "@/services/auth.service";
 import { dangerSx, pathData, successSx } from "@/const/auth.conts";
 import z from "zod";
 
@@ -152,9 +152,16 @@ export default function AuthPage() {
         if (
           emailValidation.success &&
           passwordValidation.success &&
-          state.usernameStatus === "200"
+          state.usernameStatus === "201"
         ) {
-          console.log("ok");
+          const req = await sendOtp({
+            email: state.email,
+            password: state.password,
+            username: state.username,
+          });
+          console.log(req?.data);
+          if (req?.status === 200) {
+          }
         }
       }
     } catch (error) {

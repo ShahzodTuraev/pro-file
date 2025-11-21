@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
   try {
     const body: SignUpReqBody = await req.json();
     const cookieStore = await cookies();
-    const visit_id = cookieStore.get("VID")?.value || "unknown";
     const expire_at = new Date(Date.now() + 3.5 * 60 * 1000); // now + 3 minutes
     const otp = String(randomInt(100000, 999999));
     const parsed = signupSchema.safeParse(body);
