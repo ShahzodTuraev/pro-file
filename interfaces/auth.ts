@@ -3,3 +3,7 @@ export interface SignUpReqBody {
   password: string;
   username: string;
 }
+export interface SignInReqBody {
+  email: string;
+  password: string;
+}

@@ -13,7 +13,7 @@ import {
   OutlinedInput,
   TextField,
 } from "@mui/material";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import Logo from "../logo/Logo";
 import { signIn } from "next-auth/react";
 import { formReducer, initialState, State } from "./authReducer";
@@ -32,7 +32,6 @@ export default function AuthPage() {
   const router = useRouter();
   const path = usePathname();
   const emailSchema = z.string().email("Invalid email format");
-  const formRef = useRef(null);
   const passwordSchema = z
     .string()
     .min(8, "Password must be at least 8 characters");
@@ -145,24 +144,23 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
+      const emailValidation = emailSchema.safeParse(state.email);
+      const passwordValidation = passwordSchema.safeParse(state.password);
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "emailAlert",
+        value: emailValidation.success
+          ? null
+          : emailValidation?.error?.issues[0].message,
+      });
+      dispatch({
+        type: "FIELD_CHANGE",
+        field: "passwordAlert",
+        value: passwordValidation.success
+          ? null
+          : passwordValidation?.error?.issues[0].message,
+      });
       if (path === "/signup") {
-        const emailValidation = emailSchema.safeParse(state.email);
-        const passwordValidation = passwordSchema.safeParse(state.password);
-        dispatch({
-          type: "FIELD_CHANGE",
-          field: "emailAlert",
-          value: emailValidation.success
-            ? null
-            : emailValidation?.error?.issues[0].message,
-        });
-        dispatch({
-          type: "FIELD_CHANGE",
-          field: "passwordAlert",
-          value: passwordValidation.success
-            ? null
-            : passwordValidation?.error?.issues[0].message,
-        });
-
         if (
           emailValidation.success &&
           passwordValidation.success &&
@@ -232,6 +230,9 @@ export default function AuthPage() {
             router.push("/");
           }
         }
+      }
+      if (path === "/signin") {
+        console.log(state.email, state.password);
       }
     } catch (error) {
       console.log(error);
@@ -465,7 +466,7 @@ export default function AuthPage() {
       </div>
       <div className={styles.footer}>
         <p>{pageData.headText}</p>
-        <Link href={pageData.headPath}>{pageData.headLink}</Link>{" "}
+        <Link href={pageData.headPath || "/"}>{pageData.headLink}</Link>{" "}
       </div>
     </main>
   );
