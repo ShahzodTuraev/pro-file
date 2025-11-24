@@ -36,9 +36,17 @@ export const reSendOtp = async () => {
   }
 };
 
-export const checkOtp = async (otp: string) => {
+export const checkOtp = async ({
+  otp,
+  type,
+  password,
+}: {
+  otp: string;
+  type: string;
+  password: string;
+}) => {
   try {
-    return await axios.post("/api/v1/auth/otp/check", { otp });
+    return await axios.post("/api/v1/auth/otp/check", { otp, type, password });
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return error.response;

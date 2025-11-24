@@ -206,6 +206,7 @@ export default function AuthPage() {
             username: state.username,
             type: "SIGNUP",
           });
+          setField("disableSubmitBtn", null);
 
           if (req?.status === 201) {
             setField("emailAlert", null);
@@ -226,7 +227,11 @@ export default function AuthPage() {
         // 2) Verify OTP
         if (state.otp.length >= MIN_OTP_LENGTH) {
           setField("disableSubmitBtn", "loading");
-          const res = await checkOtp(state.otp);
+          const res = await checkOtp({
+            type: "SIGNUP",
+            otp: state.otp,
+            password: "",
+          });
 
           if (!res) {
             setField("disableSubmitBtn", null);
@@ -269,6 +274,53 @@ export default function AuthPage() {
           );
         } else {
           setField("passwordAlert", "Something went wrong.");
+        }
+      }
+      if (isForgot) {
+        if (state.password === state.repassword && state.otp.length === 0) {
+          setField("disableSubmitBtn", "loading");
+          setField("repasswordAlert", null);
+          setField("passwordAlert", null);
+          const req = await sendOtp({
+            email: state.email,
+            password: "",
+            username: "",
+            type: "FORGOT",
+          });
+          setField("disableSubmitBtn", null);
+          if (req?.status === 201) {
+            setField("emailAlert", null);
+            setField("sentOtp", true);
+            setField("disableSubmitBtn", "disable");
+          }
+        } else if (
+          state.password === state.repassword &&
+          state.otp.length !== 0
+        ) {
+          setField("disableSubmitBtn", "loading");
+          const res = await checkOtp({
+            type: "FORGOT",
+            otp: state.otp,
+            password: state.password,
+          });
+
+          setField("disableSubmitBtn", null);
+          if (!res) {
+            setField("otpAlert", "Something went wrong.");
+            return;
+          }
+          if (res.status === 403) {
+            setField("otpAlert", res.data?.message || "Invalid OTP.");
+            setField("disableSubmitBtn", null);
+          } else if (res.status === 200) {
+            setField("disableSubmitBtn", null);
+            router.push("/signin");
+          } else {
+            setField("disableSubmitBtn", null);
+            setField("otpAlert", "Something went wrong.");
+          }
+        } else {
+          setField("repasswordAlert", "Passwords do not match.");
         }
       }
     } catch (error) {
@@ -375,25 +427,66 @@ export default function AuthPage() {
           )}
 
           {/* PASSWORD (NOT FORGOT) */}
-          {!isForgot && (
+
+          <FormControl
+            required
+            sx={{ width: "100%" }}
+            size="small"
+            variant="outlined"
+            error={!!state.passwordAlert}
+          >
+            <InputLabel htmlFor="outlined-adornment-password">
+              Password
+            </InputLabel>
+
+            <OutlinedInput
+              name="password"
+              id="outlined-adornment-password"
+              autoComplete="off"
+              type={state.showPassword ? "text" : "password"}
+              onChange={handleChange}
+              value={state.password}
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label={
+                      state.showPassword ? "hide password" : "show password"
+                    }
+                    onClick={() =>
+                      setField("showPassword", !state.showPassword)
+                    }
+                    onMouseDown={handleMouseDownPassword}
+                    onMouseUp={handleMouseUpPassword}
+                    edge="end"
+                  >
+                    {state.showPassword ? <Eye /> : <EyeOff />}
+                  </IconButton>
+                </InputAdornment>
+              }
+              label="Password"
+            />
+
+            <FormHelperText>{state.passwordAlert}</FormHelperText>
+          </FormControl>
+          {isForgot && (
             <FormControl
               required
               sx={{ width: "100%" }}
               size="small"
               variant="outlined"
-              error={!!state.passwordAlert}
+              error={!!state.repasswordAlert}
             >
-              <InputLabel htmlFor="outlined-adornment-password">
-                Password
+              <InputLabel htmlFor="outlined-adornment-repassword">
+                Confirm Password
               </InputLabel>
 
               <OutlinedInput
-                name="password"
-                id="outlined-adornment-password"
+                name="repassword"
+                id="outlined-adornment-repassword"
                 autoComplete="off"
                 type={state.showPassword ? "text" : "password"}
                 onChange={handleChange}
-                value={state.password}
+                value={state.repassword}
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
@@ -411,15 +504,14 @@ export default function AuthPage() {
                     </IconButton>
                   </InputAdornment>
                 }
-                label="Password"
+                label="Confirm Password"
               />
 
-              <FormHelperText>{state.passwordAlert}</FormHelperText>
+              <FormHelperText>{state.repasswordAlert}</FormHelperText>
             </FormControl>
           )}
-
           {/* OTP (SIGNUP + SENT) */}
-          {isSignup && state.sentOtp && (
+          {state.sentOtp && (
             <>
               <FormControl variant="outlined">
                 <OutlinedInput

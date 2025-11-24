@@ -24,13 +24,20 @@ export async function POST(req: NextRequest) {
     });
     if (otpData?.otp) {
       const check = await bcrypt.compare(body.otp, otpData?.otp);
-      if (check) {
+      if (check && body.type === "SIGNUP") {
         const user = await prisma.pending_user.findFirst({
           where: { visit_id },
           orderBy: { created_at: "desc" },
         });
-        console.log(user);
-        if (user && visit_id) {
+        if (!check) {
+          return NextResponse.json(
+            { message: "OTP is not correct" },
+            {
+              status: 403,
+            }
+          );
+        }
+        if (user && visit_id && body.type === "SIGNUP") {
           const savedUser = await prisma.user_list.create({
             data: {
               username: user?.name,
@@ -51,8 +58,20 @@ export async function POST(req: NextRequest) {
             redirect: false,
           });
         }
+
         return NextResponse.json(
           { message: "OTP confirmed successfully" },
+          {
+            status: 200,
+          }
+        );
+      } else if (body.type === "FORGOT" && body.password && check) {
+        await prisma.user_list.update({
+          where: { email: otpData.email },
+          data: { password: body.password },
+        });
+        return NextResponse.json(
+          { message: "Pasword changed successfully" },
           {
             status: 200,
           }
@@ -66,7 +85,10 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      return NextResponse.json({ message: "OTP has expired" }, { status: 403 });
+      return NextResponse.json(
+        { message: "Something went wrong." },
+        { status: 400 }
+      );
     }
   } catch (err) {
     return NextResponse.json({

@@ -3,12 +3,15 @@ export type State = {
   emailAlert: string | null;
   password: string;
   passwordAlert: string | null;
+  repassword: string;
+  repasswordAlert: string | null;
   username: string;
   usernameStatus: null | string;
   usernameAlert: string;
   disableSubmitBtn: null | string;
   otpAlert: null | string;
   showPassword: boolean;
+  showRePassword: boolean;
   otp: string;
   sentOtp: boolean;
   isResend: boolean;
@@ -24,9 +27,12 @@ export const initialState: State = {
   emailAlert: null,
   password: "",
   passwordAlert: null,
+  repassword: "",
+  repasswordAlert: null,
   usernameStatus: null,
   usernameAlert: "",
   showPassword: false,
+  showRePassword: false,
   sentOtp: false,
   otp: "",
   otpAlert: null,

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       where: { email: body.email },
     });
     // check if the user data already exists
-    if (!!existingUser) {
+    if (!!existingUser && body.type === "SIGNUP") {
       return NextResponse.json(
         {
           message: "This email already registered",
