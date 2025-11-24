@@ -43,7 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === "google") {
         try {
           const res = await axios.post(
-            `${process.env.API_LINK}/api/auth/google-auth`,
+            `${process.env.API_LINK}/api/v1/auth/google-auth`,
             { ...user, visit_id: visit_id }
           );
 

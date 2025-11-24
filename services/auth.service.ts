@@ -1,4 +1,4 @@
-import { SignUpReqBody } from "@/interfaces/auth";
+import { SignInReqBody, SignUpReqBody } from "@/interfaces/auth";
 import axios from "axios";
 
 export const usernameCheck = async (value: string) => {
@@ -39,6 +39,16 @@ export const reSendOtp = async () => {
 export const checkOtp = async (otp: string) => {
   try {
     return await axios.post("/api/v1/auth/otp/check", { otp });
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return error.response;
+    }
+  }
+};
+
+export const signInService = async (data: SignInReqBody) => {
+  try {
+    return await axios.post("/api/v1/auth/signin", data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return error.response;

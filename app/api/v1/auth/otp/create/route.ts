@@ -6,19 +6,23 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomInt } from "crypto";
-import axios from "axios";
+import { emailSender } from "@/lib/services/emailSender";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
+const forgotSchema = z.string().email("Invalid email format");
 export async function POST(req: NextRequest) {
   try {
     const body: SignUpReqBody = await req.json();
     const cookieStore = await cookies();
     const expire_at = new Date(Date.now() + 3.5 * 60 * 1000); // now + 3 minutes
     const otp = String(randomInt(100000, 999999));
-    const parsed = signupSchema.safeParse(body);
+    const parsed =
+      body.type === "SIGNUP"
+        ? signupSchema.safeParse(body)
+        : forgotSchema.safeParse(body.email);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -31,7 +35,7 @@ export async function POST(req: NextRequest) {
       );
     }
     const existingUser = await prisma.user_list.findUnique({
-      where: { email: parsed.data.email },
+      where: { email: body.email },
     });
     // check if the user data already exists
     if (!!existingUser) {
@@ -49,16 +53,18 @@ export async function POST(req: NextRequest) {
     });
     // bycript the otp and password:
     const otpSecret = await bcrypt.hash(otp, 10);
-    const passSecret = await bcrypt.hash(body.password, 10);
-    // save user data on pending data table:
-    await prisma.pending_user.create({
-      data: {
-        email: body.email,
-        name: body.username,
-        password: passSecret,
-        visit_id: cookieStore.get("VID")?.value || anonVisit?.id || "unknown",
-      },
-    });
+    if (body.type === "SIGNUP") {
+      const passSecret = await bcrypt.hash(body.password, 10);
+      // save user data on pending data table:
+      await prisma.pending_user.create({
+        data: {
+          email: body.email,
+          name: body.username,
+          password: passSecret,
+          visit_id: cookieStore.get("VID")?.value || anonVisit?.id || "unknown",
+        },
+      });
+    }
     // save encoded otp in database
     const otpData = await prisma.otp_list.create({
       data: {
@@ -74,31 +80,15 @@ export async function POST(req: NextRequest) {
     });
 
     // send otp to user's email:
-    await axios.post(
-      "https://api.brevo.com/v3/smtp/email",
-      {
-        sender: { name: "ProFile OTP", email: "pro.file.mailer24@gmail.com" },
-        to: [{ email: `${body.email}` }],
-        subject: "Sign Up OTP",
-        htmlContent: `<html><body><p>Your OTP for ProFile is <strong>${otp}</strong></p></body></html>`,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": `${process.env.BREVO_API_KEY}`,
-        },
-      }
-    );
+    await emailSender({ type: "OTP", email: body.email, otp });
+
     return NextResponse.json(
       {
         message: "OTP sent to your email successfully",
       },
       { status: 201 }
     );
-  } catch (err) {
-    return NextResponse.json({
-      status: 500,
-      message: err,
-    });
+  } catch (error) {
+    return NextResponse.json({ message: error }, { status: 500 });
   }
 }

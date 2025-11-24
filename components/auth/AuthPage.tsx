@@ -1,4 +1,5 @@
 "use client";
+
 import { CircleCheckBig, Eye, EyeOff } from "lucide-react";
 import styles from "./AuthPage.module.css";
 import Link from "next/link";
@@ -13,7 +14,7 @@ import {
   OutlinedInput,
   TextField,
 } from "@mui/material";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useState, useCallback } from "react";
 import Logo from "../logo/Logo";
 import { signIn } from "next-auth/react";
 import { formReducer, initialState, State } from "./authReducer";
@@ -21,238 +22,280 @@ import {
   checkOtp,
   reSendOtp,
   sendOtp,
+  signInService,
   usernameCheck,
 } from "@/services/auth.service";
 import { dangerSx, pathData, successSx } from "@/const/auth.conts";
 import z from "zod";
 import toast from "react-hot-toast";
 
+// =========================
+// CONSTANTS & SCHEMAS
+// =========================
+const DEBOUNCE_DELAY = 1000; // 1 second
+const MIN_PASSWORD_LENGTH = 8;
+const MIN_OTP_LENGTH = 4; // same behavior as your original (>3)
+const USERNAME_REGEX = /^[a-zA-Z0-9]+$/;
+
+const emailSchema = z.string().email("Invalid email format");
+const passwordSchema = z
+  .string()
+  .min(MIN_PASSWORD_LENGTH, "Password must be at least 8 characters");
+
 export default function AuthPage() {
-  // INITIALIZATION
   const router = useRouter();
   const path = usePathname();
-  const emailSchema = z.string().email("Invalid email format");
-  const passwordSchema = z
-    .string()
-    .min(8, "Password must be at least 8 characters");
-  const [debouncedValue, setDebouncedValue] = useState("");
-  const pageData = pathData(path);
-
   const [state, dispatch] = useReducer(formReducer, initialState);
-  // HANDLERS
+  const [debouncedUsername, setDebouncedUsername] = useState("");
 
-  // 1. Update `debouncedValue` only if input doesn’t change for 1 second
+  const pageData = pathData(path);
+  const isSignup = path === "/signup";
+  const isSignin = path === "/signin";
+  const isForgot = path === "/forgot";
+
+  const setField = useCallback(
+    (field: keyof State, value: State[keyof State]) => {
+      dispatch({ type: "FIELD_CHANGE", field, value });
+    },
+    []
+  );
+
+  // =========================
+  // USERNAME DEBOUNCE EFFECT
+  // =========================
   useEffect(() => {
-    if (state.username !== "") {
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "usernameStatus",
-        value: "loading",
-      });
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "usernameAlert",
-        value: "",
-      });
-    }
-    const handler = setTimeout(() => {
-      setDebouncedValue(state.username);
-    }, 800); // 1 second debounce
+    if (!isSignup) return;
 
-    return () => clearTimeout(handler);
-  }, [state.username]);
+    const username = state.username;
 
-  // 2. Trigger backend request when `debouncedValue` updates
-  const checkUserName = async () => {
-    const data = await usernameCheck(state.username);
-    if (data?.status === 200) {
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "usernameStatus",
-        value: data?.status.toString(),
-      });
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "usernameAlert",
-        value: "",
-      });
-    }
-    if (data?.status === 422) {
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "usernameStatus",
-        value: data?.status.toString(),
-      });
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "usernameAlert",
-        value: data?.data.message,
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (!debouncedValue) {
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "usernameAlert",
-        value: "",
-      });
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "usernameStatus",
-        value: null,
-      });
+    if (!username) {
+      setDebouncedUsername("");
+      setField("usernameAlert", "");
+      setField("usernameStatus", null);
       return;
     }
+
+    // reset state while user is still typing
+    setField("usernameStatus", "loading");
+    setField("usernameAlert", "");
+
+    const timer = setTimeout(() => {
+      setDebouncedUsername(username);
+    }, DEBOUNCE_DELAY);
+
+    return () => clearTimeout(timer);
+  }, [state.username, isSignup, setField]);
+
+  // =========================
+  // USERNAME CHECK EFFECT
+  // =========================
+  useEffect(() => {
+    if (!isSignup || !debouncedUsername) return;
+
+    let cancelled = false;
+
+    const checkUserName = async () => {
+      try {
+        const data = await usernameCheck(debouncedUsername);
+
+        if (cancelled || !data) return;
+
+        if (data.status === 200) {
+          setField("usernameStatus", "200");
+          setField("usernameAlert", "");
+        } else if (data.status === 422) {
+          setField("usernameStatus", "422");
+          setField("usernameAlert", data.data?.message || "");
+        } else {
+          setField("usernameStatus", "422");
+          setField("usernameAlert", "Unable to validate username.");
+        }
+      } catch {
+        if (!cancelled) {
+          setField("usernameStatus", "422");
+          setField("usernameAlert", "Unable to validate username.");
+        }
+      }
+    };
+
     checkUserName();
-  }, [debouncedValue]);
-  // HANDLER
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedUsername, isSignup, setField]);
+
+  // =========================
+  // HANDLERS
+  // =========================
   const handleMouseDownPassword = (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
   };
+
   const handleMouseUpPassword = (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
   };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    dispatch({
-      type: "FIELD_CHANGE",
-      field: name as keyof State,
-      value:
-        name === "username"
-          ? /^[a-zA-Z0-9]+$/.test(value)
-            ? value.toLowerCase()
-            : value === ""
-            ? ""
-            : state.username
-          : value,
-    });
-    if (name === "otp" && state.otp.length > 3) {
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "disableSubmitBtn",
-        value: null,
-      });
+
+    if (name === "username") {
+      // only allow alphanumeric; if invalid, ignore (except empty)
+      if (value === "") {
+        setField("username", "");
+      } else if (USERNAME_REGEX.test(value)) {
+        setField("username", value.toLowerCase());
+      }
+      return;
     }
+
+    if (name === "otp") {
+      const numericValue = value.replace(/[^0-9]/g, "");
+      setField("otp", numericValue);
+
+      // Enable submit button when enough digits are entered
+      if (numericValue.length >= MIN_OTP_LENGTH) {
+        setField("disableSubmitBtn", null);
+      } else {
+        setField("disableSubmitBtn", "disable");
+      }
+      return;
+    }
+
+    setField(name as keyof State, value);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
     try {
-      e.preventDefault();
       const emailValidation = emailSchema.safeParse(state.email);
       const passwordValidation = passwordSchema.safeParse(state.password);
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "emailAlert",
-        value: emailValidation.success
+
+      setField(
+        "emailAlert",
+        emailValidation.success
           ? null
-          : emailValidation?.error?.issues[0].message,
-      });
-      dispatch({
-        type: "FIELD_CHANGE",
-        field: "passwordAlert",
-        value: passwordValidation.success
+          : emailValidation.error?.issues[0].message
+      );
+      setField(
+        "passwordAlert",
+        passwordValidation.success
           ? null
-          : passwordValidation?.error?.issues[0].message,
-      });
-      if (path === "/signup") {
-        if (
+          : passwordValidation.error?.issues[0].message
+      );
+
+      // ========== SIGNUP ==========
+      if (isSignup) {
+        const isBaseValid =
           emailValidation.success &&
           passwordValidation.success &&
-          state.usernameStatus === "200" &&
-          state.otp.length == 0
-        ) {
-          dispatch({
-            type: "FIELD_CHANGE",
-            field: "disableSubmitBtn",
-            value: "loading",
-          });
+          state.usernameStatus === "200";
+
+        // 1) Send OTP
+        if (isBaseValid && state.otp.length === 0) {
+          setField("disableSubmitBtn", "loading");
+
           const req = await sendOtp({
             email: state.email,
             password: state.password,
             username: state.username,
+            type: "SIGNUP",
           });
-          console.log(req?.data);
+
           if (req?.status === 201) {
-            dispatch({
-              type: "FIELD_CHANGE",
-              field: "emailAlert",
-              value: null,
-            });
-            dispatch({ type: "FIELD_CHANGE", field: "sentOtp", value: true });
-            dispatch({
-              type: "FIELD_CHANGE",
-              field: "disableSubmitBtn",
-              value: "disable",
-            });
+            setField("emailAlert", null);
+            setField("sentOtp", true);
+            setField("disableSubmitBtn", "disable");
           } else if (req?.status === 409) {
-            dispatch({
-              type: "FIELD_CHANGE",
-              field: "emailAlert",
-              value: req.data?.message,
-            });
+            setField(
+              "emailAlert",
+              req.data?.message || "Email already in use."
+            );
+            setField("disableSubmitBtn", null);
           } else {
-            dispatch({
-              type: "FIELD_CHANGE",
-              field: "emailAlert",
-              value: "Something went wrong.",
-            });
+            setField("emailAlert", "Something went wrong.");
+            setField("disableSubmitBtn", null);
           }
         }
-        if (state.otp.length > 3) {
-          dispatch({
-            type: "FIELD_CHANGE",
-            field: "disableSubmitBtn",
-            value: "loading",
-          });
+
+        // 2) Verify OTP
+        if (state.otp.length >= MIN_OTP_LENGTH) {
+          setField("disableSubmitBtn", "loading");
           const res = await checkOtp(state.otp);
-          console.log(res);
-          if (res?.status) {
-            dispatch({
-              type: "FIELD_CHANGE",
-              field: "disableSubmitBtn",
-              value: null,
-            });
+
+          if (!res) {
+            setField("disableSubmitBtn", null);
+            setField("otpAlert", "Something went wrong.");
+            return;
           }
-          if (res?.status === 403) {
-            dispatch({
-              type: "FIELD_CHANGE",
-              field: "otpAlert",
-              value: res.data.message,
-            });
-          }
-          if (res?.status === 200) {
+
+          if (res.status === 403) {
+            setField("otpAlert", res.data?.message || "Invalid OTP.");
+            setField("disableSubmitBtn", null);
+          } else if (res.status === 200) {
+            setField("disableSubmitBtn", null);
             router.push("/");
+          } else {
+            setField("disableSubmitBtn", null);
+            setField("otpAlert", "Something went wrong.");
           }
         }
+
+        return;
       }
-      if (path === "/signin") {
-        console.log(state.email, state.password);
+
+      // ========== SIGNIN ==========
+      if (isSignin) {
+        const res = await signInService({
+          email: state.email,
+          password: state.password,
+        });
+
+        if (!res) return;
+
+        if (res.status === 200) {
+          router.push("/");
+        } else if (res.status === 404) {
+          setField("emailAlert", res.data?.message || "User not found.");
+        } else if (res.status === 401) {
+          setField(
+            "passwordAlert",
+            res.data?.message || "Invalid credentials."
+          );
+        } else {
+          setField("passwordAlert", "Something went wrong.");
+        }
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
+
   const reSendOtpHandler = async () => {
     try {
-      dispatch({ type: "FIELD_CHANGE", field: "isResend", value: true });
+      setField("isResend", true);
       const req = await reSendOtp();
-      if (req?.status == 201) {
+
+      if (req?.status === 201) {
         toast.success("OTP sent to your email.", { duration: 2000 });
-        dispatch({ type: "FIELD_CHANGE", field: "isResend", value: false });
       } else {
         toast.error("Something went wrong.", { duration: 2000 });
-        dispatch({ type: "FIELD_CHANGE", field: "isResend", value: false });
       }
-    } catch (error) {
-      throw error;
+    } catch {
+      toast.error("Something went wrong.", { duration: 2000 });
+    } finally {
+      setField("isResend", false);
     }
   };
+
+  // =========================
+  // RENDER
+  // =========================
   return (
     <main className={styles.authPage}>
       <div className={styles.header}>
@@ -260,9 +303,18 @@ export default function AuthPage() {
           <Logo />
         </div>
       </div>
+
       <div className={styles.formContainer}>
         <h2>{pageData.header}</h2>
+
+        {isForgot && (
+          <p className={styles.info}>
+            Enter your Bio Link email to reset your password
+          </p>
+        )}
+
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* EMAIL */}
           <TextField
             label="Email"
             name="email"
@@ -274,9 +326,11 @@ export default function AuthPage() {
             onChange={handleChange}
             helperText={state.emailAlert}
           />
-          {path === "/signup" && (
+
+          {/* USERNAME (SIGNUP ONLY) */}
+          {isSignup && (
             <TextField
-              id="outlined-basic"
+              id="outlined-username"
               type="text"
               name="username"
               onChange={handleChange}
@@ -320,52 +374,52 @@ export default function AuthPage() {
             />
           )}
 
-          <FormControl
-            required
-            sx={{ width: "100%" }}
-            size="small"
-            variant="outlined"
-            error={!!state.passwordAlert} // error holatini ham shu yerga biriktirasiz
-          >
-            <InputLabel htmlFor="outlined-adornment-password">
-              Password
-            </InputLabel>
+          {/* PASSWORD (NOT FORGOT) */}
+          {!isForgot && (
+            <FormControl
+              required
+              sx={{ width: "100%" }}
+              size="small"
+              variant="outlined"
+              error={!!state.passwordAlert}
+            >
+              <InputLabel htmlFor="outlined-adornment-password">
+                Password
+              </InputLabel>
 
-            <OutlinedInput
-              name="password"
-              id="outlined-adornment-password"
-              autoComplete="off"
-              type={state.showPassword ? "text" : "password"}
-              onChange={handleChange}
-              value={state.password}
-              endAdornment={
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label={
-                      state.showPassword ? "hide password" : "show password"
-                    }
-                    onClick={() =>
-                      dispatch({
-                        type: "FIELD_CHANGE",
-                        field: "showPassword",
-                        value: !state.showPassword,
-                      })
-                    }
-                    onMouseDown={handleMouseDownPassword}
-                    onMouseUp={handleMouseUpPassword}
-                    edge="end"
-                  >
-                    {state.showPassword ? <Eye /> : <EyeOff />}
-                  </IconButton>
-                </InputAdornment>
-              }
-              label="Password"
-            />
+              <OutlinedInput
+                name="password"
+                id="outlined-adornment-password"
+                autoComplete="off"
+                type={state.showPassword ? "text" : "password"}
+                onChange={handleChange}
+                value={state.password}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={
+                        state.showPassword ? "hide password" : "show password"
+                      }
+                      onClick={() =>
+                        setField("showPassword", !state.showPassword)
+                      }
+                      onMouseDown={handleMouseDownPassword}
+                      onMouseUp={handleMouseUpPassword}
+                      edge="end"
+                    >
+                      {state.showPassword ? <Eye /> : <EyeOff />}
+                    </IconButton>
+                  </InputAdornment>
+                }
+                label="Password"
+              />
 
-            <FormHelperText>{state.passwordAlert}</FormHelperText>
-          </FormControl>
+              <FormHelperText>{state.passwordAlert}</FormHelperText>
+            </FormControl>
+          )}
 
-          {path === "/signup" && state.sentOtp && (
+          {/* OTP (SIGNUP + SENT) */}
+          {isSignup && state.sentOtp && (
             <>
               <FormControl variant="outlined">
                 <OutlinedInput
@@ -404,6 +458,8 @@ export default function AuthPage() {
               </p>
             </>
           )}
+
+          {/* SUBMIT BUTTON */}
           <button
             disabled={
               state.disableSubmitBtn === "disable" ||
@@ -425,49 +481,68 @@ export default function AuthPage() {
               pageData.mainButton
             )}
           </button>
+
+          {!isForgot && (
+            <Link href="/forgot" className={styles.forgetPassword}>
+              Forget password?
+            </Link>
+          )}
         </form>
-        <div className={styles.wallBox}>
-          <div />
-          <p>Or</p>
-          <div />
-        </div>
-        <button onClick={() => signIn("google")} className={styles.googleBtn}>
-          <span className={styles.googleIcon}>
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              role="img"
-              aria-hidden="false"
-              aria-labelledby=":r0:_title"
+
+        {/* GOOGLE SIGN-IN / OR DIVIDER */}
+        {!isForgot && (
+          <>
+            <div className={styles.wallBox}>
+              <div />
+              <p>Or</p>
+              <div />
+            </div>
+
+            <button
+              onClick={() => signIn("google")}
+              className={styles.googleBtn}
             >
-              <path
-                fill="#4285F4"
-                d="M21.6 12.23c0-.71-.06-1.4-.18-2.05H12v3.87h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.89-1.73 2.98-4.3 2.98-7.34Z"
-              ></path>
-              <path
-                fill="#34A853"
-                d="M12 22c2.7 0 4.96-.9 6.62-2.42l-3.23-2.51c-.9.6-2.04.95-3.39.95-2.6 0-4.8-1.76-5.6-4.12H3.06v2.6A10 10 0 0 0 12 22Z"
-              ></path>
-              <path
-                fill="#FBBC05"
-                d="M6.4 13.9a6.01 6.01 0 0 1 0-3.8V7.5H3.06a10 10 0 0 0 0 9l3.34-2.6Z"
-              ></path>
-              <path
-                fill="#EA4335"
-                d="M12 5.98c1.47 0 2.79.5 3.82 1.5L18.7 4.6A10 10 0 0 0 3.06 7.5l3.34 2.6c.8-2.36 3-4.12 5.6-4.12Z"
-              ></path>
-            </svg>
-          </span>
-          {pageData.googleButton}
-        </button>
+              <span className={styles.googleIcon}>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  role="img"
+                  aria-hidden="false"
+                  aria-labelledby=":r0:_title"
+                >
+                  <path
+                    fill="#4285F4"
+                    d="M21.6 12.23c0-.71-.06-1.4-.18-2.05H12v3.87h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.24c1.89-1.73 2.98-4.3 2.98-7.34Z"
+                  ></path>
+                  <path
+                    fill="#34A853"
+                    d="M12 22c2.7 0 4.96-.9 6.62-2.42l-3.23-2.51c-.9.6-2.04.95-3.39.95-2.6 0-4.8-1.76-5.6-4.12H3.06v2.6A10 10 0 0 0 12 22Z"
+                  ></path>
+                  <path
+                    fill="#FBBC05"
+                    d="M6.4 13.9a6.01 6.01 0 0 1 0-3.8V7.5H3.06a10 10 0 0 0 0 9l3.34-2.6Z"
+                  ></path>
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.98c1.47 0 2.79.5 3.82 1.5L18.7 4.6A10 10 0 0 0 3.06 7.5l3.34 2.6c.8-2.36 3-4.12 5.6-4.12Z"
+                  ></path>
+                </svg>
+              </span>
+              {pageData.googleButton}
+            </button>
+          </>
+        )}
       </div>
-      <div className={styles.footer}>
-        <p>{pageData.headText}</p>
-        <Link href={pageData.headPath || "/"}>{pageData.headLink}</Link>{" "}
-      </div>
+
+      {!isForgot && (
+        <div className={styles.footer}>
+          <p>{pageData.headText}</p>
+          <Link href={pageData.headPath || "/"}>{pageData.headLink}</Link>
+        </div>
+      )}
     </main>
   );
 }

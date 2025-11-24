@@ -7,7 +7,8 @@ import { signIn } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const body: { otp: string } = await req.json();
+    const body: { otp: string; password?: string; type: string } =
+      await req.json();
     const cookieStore = await cookies();
     const visit_id = cookieStore.get("VID")?.value;
     const otpData = await prisma.otp_list.findFirst({
