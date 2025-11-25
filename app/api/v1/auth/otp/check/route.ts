@@ -66,9 +66,10 @@ export async function POST(req: NextRequest) {
           }
         );
       } else if (body.type === "FORGOT" && body.password && check) {
+        const passSecret = await bcrypt.hash(body.password, 10);
         await prisma.user_list.update({
           where: { email: otpData.email },
-          data: { password: body.password },
+          data: { password: passSecret },
         });
         return NextResponse.json(
           { message: "Pasword changed successfully" },

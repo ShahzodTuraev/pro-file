@@ -314,6 +314,7 @@ export default function AuthPage() {
             setField("disableSubmitBtn", null);
           } else if (res.status === 200) {
             setField("disableSubmitBtn", null);
+            toast.success("Password changed successfully.", { duration: 2000 });
             router.push("/signin");
           } else {
             setField("disableSubmitBtn", null);
