@@ -244,7 +244,8 @@ export default function AuthPage() {
             setField("disableSubmitBtn", null);
           } else if (res.status === 200) {
             setField("disableSubmitBtn", null);
-            router.push("/");
+
+            window.location.replace("/");
           } else {
             setField("disableSubmitBtn", null);
             setField("otpAlert", "Something went wrong.");
@@ -264,7 +265,7 @@ export default function AuthPage() {
         if (!res) return;
 
         if (res.status === 200) {
-          router.push("/");
+          window.location.replace("/");
         } else if (res.status === 404) {
           setField("emailAlert", res.data?.message || "User not found.");
         } else if (res.status === 401) {
