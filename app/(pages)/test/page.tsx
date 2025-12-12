@@ -18,7 +18,6 @@ export default function AuthForm() {
         email,
         password,
       });
-      console.log("res:::", res);
     } catch (error) {
       console.log("signup error:::", error);
     }
