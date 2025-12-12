@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     // 2. If not, create new user
     if (!user) {
       user = await prisma.user_list.create({
-        data: { email, name, ...visit, auth_type: "GOOGLE", img_url },
+        data: { email, username: name, ...visit, auth_type: "GOOGLE", img_url },
         select: { id: true },
       });
     }
