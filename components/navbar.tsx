@@ -71,7 +71,7 @@ export default function Header() {
                 >
                   <img
                     className={styles.avatar}
-                    src="/home/user.png"
+                    src="/home/user.svg"
                     alt="user"
                   />{" "}
                   {open ? <ChevronUp width={20} /> : <ChevronDown width={20} />}
