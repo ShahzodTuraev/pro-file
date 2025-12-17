@@ -13,7 +13,7 @@ import Link from "next/link";
 export default function WhiteTemp() {
   return (
     <main className="flex justify-center">
-      <div className="w-full p-7 md:rounded-3xl bg-white flex flex-col items-center shadow-xl md:my-10 md:w-145 ">
+      <div className="w-full p-3 md:p-7 md:rounded-3xl bg-white flex flex-col items-center shadow-xl md:my-10 md:w-145 ">
         <img
           className="w-24 h-24 mt-10 mb-4"
           src="/home/user.svg"
