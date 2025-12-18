@@ -10,20 +10,10 @@ import {
 import { RiKakaoTalkFill, RiTwitterXFill } from "react-icons/ri";
 import Link from "next/link";
 
-export default function RedTemp() {
+export default function JoyTemp() {
   return (
-    <main
-      style={{
-        backgroundImage:
-          "linear-gradient(to bottom right, rgba(124, 45, 18, 0.8), rgba(159, 18, 57, 0.7), rgba(146, 64, 14, 0.8)), url(https://images.pexels.com/photos/1229042/pexels-photo-1229042.jpeg?auto=compress&cs=tinysrgb&w=1920)",
-        backdropFilter: "blur(4px)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-      }}
-      className="flex justify-center"
-    >
-      <div className="w-full p-3 md:p-7 md:rounded-3xl bg-white/10 backdrop-blur-lg  flex flex-col items-center shadow-xl md:my-10 md:w-145 ">
+    <main className="flex justify-center bg-gradient-to-br from-slate-900 via-teal-900 to-slate-900">
+      <div className="w-full p-3 md:p-7 md:rounded-3xl flex flex-col items-center shadow-xl md:my-10 md:w-145 ">
         <img
           className="w-24 h-24 mt-10 mb-4"
           src="/home/user.svg"
@@ -45,7 +35,7 @@ export default function RedTemp() {
             href={"https://example.com"}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex justify-center items-center w-full h-15  bg-blue-400 rounded-2xl font-semibold text-lg shadow-lg"
+            className="flex justify-center items-center w-full h-15  border border-slate-400/30 text-slate-200 hover:bg-slate-400/10 hover:border-slate-300/50 transition-all duration-300 group"
           >
             <FaTelegram className="w-7 h-7 mr-3" /> Telegram
           </Link>
